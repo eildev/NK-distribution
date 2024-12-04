@@ -33,7 +33,7 @@
                             </div>
                             <div class="mb-3 col-md-4">
                                 @php
-                                    $categories = App\Models\Category::where('status',1)->get();
+                                    $categories = App\Models\Category::get();
                                 @endphp
                                 <label for="ageSelect" class="form-label">Category <span
                                         class="text-danger">*</span></label>
@@ -92,7 +92,7 @@
                             </div>
                             <div class="mb-3 col-12">
                                 <label for="" class="form-label">Description</label>
-                                <textarea class="form-control" value="{{ old('details') }}" name="details"  rows="5"></textarea>
+                                <textarea class="form-control" value="{{ old('details') }}" name="details" id="tinymceExample" rows="5"></textarea>
                             </div>
                         </div>
                     </div>
@@ -304,7 +304,7 @@
             var nameInput = input.value.trim();
             if (nameInput !== "") {
                 var codeInput = input.parentElement.nextElementSibling.querySelector('input[name="barcode"]');
-                var randomNumber = Math.floor(Math.random() * 100000000) +
+                var randomNumber = Math.floor(Math.random() * 1000000) +
                     20; // Generate a random number between 1 and 1000000
                 var generatedCode = nameInput.replace(/\s+/g, '').toUpperCase() + randomNumber;
                 var generatedNumber = randomNumber; // Extract the generated number

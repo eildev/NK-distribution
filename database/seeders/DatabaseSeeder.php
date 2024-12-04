@@ -5,7 +5,7 @@ namespace Database\Seeders;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 use Illuminate\Database\Seeder;
-use App\Models\User;
+
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -20,8 +20,6 @@ class DatabaseSeeder extends Seeder
         // ]);
         $this->call([
             BranchSeed::class,
-            CompanySeeder::class,
-            UserLimitSeeder::class,
             UserSeed::class,
             SettingSeed::class,
             PermissionSeeder::class,
@@ -35,7 +33,6 @@ class DatabaseSeeder extends Seeder
             ExpenseCategorySeeder::class,
             SubcategorySeed::class,
             BrandSeed::class,
-            ProductSeed::class,
         ]);
     }
 }

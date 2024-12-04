@@ -4,7 +4,7 @@
 
     {{-- ///// css style design //// --}}
     <style>
-        .summary_table {
+        .table_summary {
             font-size: 12px !important;
         }
 
@@ -27,6 +27,7 @@
             .text-1 {
                 font-size: 13px
             }
+
             .mar-1 {
                 margin-bottom: 4px
             }
@@ -40,6 +41,86 @@
     <div class="row">
         <div class="col-12 col-xl-12 stretch-card">
             <div class="row flex-grow-1">
+
+                {{-- /////// ToTal Summary ////// --}}
+                <div class="col-md-12 col-xl-6 col-12 new-margin grid-margin stretch-card">
+                    <div class="card" style="">
+                        <div class="card-body">
+                            <h6 class="card-title">Total Summary</h6>
+                            <table class="table border-none table_summary">
+                                <thead>
+                                    <tr>
+                                        <th>Summary</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-end">Paid</th>
+                                        <th class="text-end">Due</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Sales</td>
+                                        <td class="text-end">{{ number_format($sales->sum('change_amount'), 2) }}</td>
+                                        <td class="text-end">{{ number_format($sales->sum('paid'), 2) }}</td>
+                                        <td class="text-end">
+                                            {{ number_format($totalCustomerDue > 0 ? $totalCustomerDue : 0, 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Purchase</td>
+                                        <td class="text-end">{{ number_format($purchase->sum('sub_total'), 2) }}</td>
+                                        <td class="text-end">{{ number_format($purchase->sum('paid'), 2) }}</td>
+                                        <td class="text-end">
+                                            {{ number_format($totalSupplierDue > 0 ? $totalSupplierDue : 0, 2) }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Exapnse</td>
+                                        <td class="text-end">{{ number_format($expanse->sum('amount'), 2) }}</td>
+                                        <td class="text-end">0.00</td>
+                                        <td class="text-end">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Salary</td>
+                                        <td class="text-end">{{ number_format($salary->sum('debit'), 2) }}</td>
+                                        <td class="text-end">0.00</td>
+                                        <td class="text-end">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Balance</td>
+                                        <td class="text-end">{{ number_format($grandTotal, 2) }}</td>
+                                        <td class="text-end">0.00</td>
+                                        <td class="text-end">0.00</td>
+                                    </tr>
+                                    @php
+                                        $products = App\Models\Product::where('branch_id', Auth::user()->branch_id)
+                                            ->orderBy('stock', 'asc')
+                                            ->get();
+                                        //Show Stock Value
+                                        $products->each(function ($product) {
+                                            $product->total_stock_value = $product->cost * $product->stock;
+                                        });
+                                        //Total stock Value
+                                        $totalStockValueSum = $products->sum('total_stock_value');
+                                    @endphp
+                                    <tr>
+                                        <td>Stock Value</td>
+                                        <td class="text-end">{{ number_format($totalStockValueSum, 2) }}</td>
+                                        <td class="text-end">0.00</td>
+                                        <td class="text-end">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Sales Profit</td>
+                                        <td class="text-end">{{ number_format($sales->sum('profit'), 2) }}</td>
+                                        <td class="text-end">0.00</td>
+                                        <td class="text-end">0.00</td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {{-- /////// End Total Summary ////// --}}
+
                 {{-- ///////Today Summary ////// --}}
                 @if (Auth::user()->id == 1)
                     @foreach ($branchData as $branchId => $data)
@@ -47,7 +128,7 @@
                             <div class="card" style="">
                                 <div class="card-body">
                                     <h6 class="card-title">{{ $data['branch']->name }} Today Summary</h6>
-                                    <table class="table summary_table">
+                                    <table class="table table_summary">
                                         <thead>
                                             <tr>
                                                 <th colspan="2">Incomming</th>
@@ -66,8 +147,7 @@
                                                 <td class="text-end">{{ number_format($data['previousDayBalance'], 2) }}
                                                 </td>
                                                 <td>Salary</td>
-                                                <td class="text-end">
-                                                    {{ number_format($data['todayEmployeeSalary'], 2) }}
+                                                <td class="text-end">{{ number_format($data['todayEmployeeSalary'], 2) }}
                                                 </td>
 
                                             </tr>
@@ -82,13 +162,11 @@
                                                 <td>Due Collection</td>
                                                 <td class="text-end">{{ number_format($data['dueCollection'], 2) }}</td>
                                                 <td>Due Paid</td>
-                                                <td class="text-end">{{ number_format($data['purchaseDuePay'], 2) }}
-                                                </td>
+                                                <td class="text-end">{{ number_format($data['purchaseDuePay'], 2) }}</td>
                                             </tr>
                                             <tr>
                                                 <td>Other Deposit</td>
-                                                <td class="text-end">{{ number_format($data['otherCollection'], 2) }}
-                                                </td>
+                                                <td class="text-end">{{ number_format($data['otherCollection'], 2) }}</td>
                                                 <td>Other Withdraw</td>
                                                 <td class="text-end">{{ number_format($data['otherPaid'], 2) }}</td>
                                             </tr>
@@ -118,8 +196,7 @@
                                                 <td>Total</td>
                                                 <td class="text-end">{{ number_format($data['totalIngoing'], 2) }}</td>
                                                 <td>Total</td>
-                                                <td class="text-end">{{ number_format($data['totalOutgoing'], 2) }}
-                                                </td>
+                                                <td class="text-end">{{ number_format($data['totalOutgoing'], 2) }}</td>
                                             </tr>
                                         </tbody>
                                         <tfoot>
@@ -140,7 +217,7 @@
                             <div class="card" style="">
                                 <div class="card-body">
                                     <h6 class="card-title">Today Total Summary</h6>
-                                    <table class="table summary_table">
+                                    <table class="table table_summary">
                                         <thead>
                                             <tr>
                                                 <th colspan="2">Incomming</th>
@@ -172,11 +249,9 @@
                                             </tr>
                                             <tr>
                                                 <td>Due Collection</td>
-                                                <td class="text-end">{{ number_format($todayTotalDueCollection, 2) }}
-                                                </td>
+                                                <td class="text-end">{{ number_format($todayTotalDueCollection, 2) }}</td>
                                                 <td>Due Paid</td>
-                                                <td class="text-end">{{ number_format($todayTotalPurchaseDuePay, 2) }}
-                                                </td>
+                                                <td class="text-end">{{ number_format($todayTotalPurchaseDuePay, 2) }}</td>
                                             </tr>
                                             <tr>
                                                 <td>Other Deposit</td>
@@ -232,7 +307,7 @@
                         <div class="card" style="">
                             <div class="card-body">
                                 <h6 class="card-title">Today Summary</h6>
-                                <table class="table summary_table">
+                                <table class="table table_summary">
                                     <thead>
                                         <tr>
                                             <th colspan="2">Incomming</th>
@@ -250,7 +325,8 @@
                                             <td>Previous Day Balance</td>
                                             <td class="text-end">{{ number_format($previousDayBalance, 2) }}</td>
                                             <td>Salary</td>
-                                            <td class="text-end">{{ number_format($todayEmployeeSalary->sum('debit'), 2) }}
+                                            <td class="text-end">
+                                                {{ number_format($todayEmployeeSalary->sum('debit'), 2) }}
                                             </td>
 
                                         </tr>
@@ -263,9 +339,11 @@
                                         </tr>
                                         <tr>
                                             <td>Due Collection</td>
-                                            <td class="text-end">{{ number_format($dueCollection->sum('credit'), 2) }}</td>
+                                            <td class="text-end">{{ number_format($dueCollection->sum('credit'), 2) }}
+                                            </td>
                                             <td>Due Paid</td>
-                                            <td class="text-end">{{ number_format($purchaseDuePay->sum('debit'), 2) }}</td>
+                                            <td class="text-end">{{ number_format($purchaseDuePay->sum('debit'), 2) }}
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td>Other Deposit</td>
@@ -316,97 +394,6 @@
                     </div>
                 @endif
                 {{-- ///////End Today Summary ////// --}}
-                {{-- /////// ToTal Summary ////// --}}
-                <div class="col-md-12 col-xl-6 col-12 new-margin grid-margin stretch-card">
-                    <div class="card" style="">
-                        <div class="card-body">
-                            <h6 class="card-title">Total Summary</h6>
-                            <table class="table border-none summary_table">
-                                <thead>
-                                    <tr>
-                                        <th>Summary</th>
-                                        <th class="text-end">Total</th>
-                                        <th class="text-end">Paid</th>
-                                        <th class="text-end">Due</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Sales</td>
-                                        <td class="text-end">{{ number_format($sales->sum('change_amount'), 2) }}</td>
-                                        <td class="text-end">{{ number_format($sales->sum('paid'), 2) }}</td>
-                                        <td class="text-end">
-                                            {{ number_format($totalCustomerDue > 0 ? $totalCustomerDue : 0, 2) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Purchase</td>
-                                        <td class="text-end">{{ number_format($purchase->sum('sub_total'), 2) }}</td>
-                                        <td class="text-end">{{ number_format($purchase->sum('paid'), 2) }}</td>
-                                        <td class="text-end">
-                                            {{ number_format($totalSupplierDue > 0 ? $totalSupplierDue : 0, 2) }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Exapnse</td>
-                                        <td class="text-end">{{ number_format($expanse->sum('amount'), 2) }}</td>
-                                        <td class="text-end">0.00</td>
-                                        <td class="text-end">0.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Salary</td>
-                                        <td class="text-end">{{ number_format($salary->sum('debit'), 2) }}</td>
-                                        <td class="text-end">0.00</td>
-                                        <td class="text-end">0.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Balance</td>
-                                        <td class="text-end">{{ number_format($grandTotal, 2) }}</td>
-                                        <td class="text-end">0.00</td>
-                                        <td class="text-end">0.00</td>
-                                    </tr>
-                                    @php
-                                        $products = App\Models\Product::withSum(
-                                            [
-                                                'stockQuantity as stock_quantity_sum' => function ($query) {
-                                                    $query->where('branch_id', Auth::user()->branch_id);
-                                                },
-                                            ],
-                                            'stock_quantity',
-                                        )
-                                            ->orderBy('stock_quantity_sum', 'asc') // or 'desc' for descending order
-                                            ->get();
-                                        //Show Stock Value
-                                        $products->each(function ($product) {
-                                            $product->total_stock_value = $product->cost * $product->stock_quantity_sum;
-                                        });
-                                        //Total stock Value
-                                        $totalStockValueSum = $products->sum('total_stock_value');
-                                    @endphp
-                                    <tr>
-                                        <td>Stock Value</td>
-                                        <td class="text-end">{{ $totalStockValueSum }}</td>
-                                        <td class="text-end">0.00</td>
-                                        <td class="text-end">0.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Sales Profit</td>
-                                        <td class="text-end">{{ number_format($sales->sum('profit'), 2) }}</td>
-                                        <td class="text-end">0.00</td>
-                                        <td class="text-end">0.00</td>
-                                    </tr>
-                                     <tr>
-                                        <td>Total Discount</td>
-                                        <td class="text-end">{{ number_format($totalBonus, 2) }}</td>
-                                        <td class="text-end">0.00</td>
-                                        <td class="text-end">0.00</td>
-                                    </tr>
-
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                {{-- /////// End Total Summary ////// --}}
             </div>
         </div>
     </div>

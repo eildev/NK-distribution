@@ -41,6 +41,7 @@ class SubCategoryController extends Controller
                 $request->image->move(public_path('uploads/subcategory'), $imageName);
                 $data['image'] = $imageName;
             }
+
             $data['slug'] = Str::slug($request->name);
 
             $this->subCategory->create($data);
@@ -140,7 +141,6 @@ class SubCategoryController extends Controller
     public function status($id)
     {
         $subcategory = SubCategory::findOrFail($id);
-        // dd($id);
         $newStatus = $subcategory->status == 0 ? 1 : 0;
         $subcategory->update([
             'status' => $newStatus
@@ -153,7 +153,7 @@ class SubCategoryController extends Controller
     }
     public function find($id)
     {
-        $subcategory = SubCategory::where('category_id', $id)->where('status',1)->get();
+        $subcategory = SubCategory::where('category_id', $id)->get();
         $size = Psize::where('category_id', $id)->get();
         return response()->json([
             'status' => 200,

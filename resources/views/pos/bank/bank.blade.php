@@ -13,10 +13,8 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="card-title">Bank Table</h6>
-                        @if (Auth::user()->can('bank.add'))
-                            <button class="btn btn-rounded-primary btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#exampleModalLongScollable"><i data-feather="plus"></i></button>
-                        @endif
+                        <button class="btn btn-rounded-primary btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#exampleModalLongScollable"><i data-feather="plus"></i></button>
                     </div>
                     <div id="" class="table-responsive">
                         <table id="dataTableExample" class="table">
@@ -27,18 +25,14 @@
                                     <th>Branch Name</th>
                                     <th>Manager/Owner Name</th>
                                     <th>Phone Number</th>
-                                    <th>Account No</th>
+                                    <th>Account</th>
                                     <th>Opening Balance</th>
-                                    <th>Balance</th>
+                                    <th>Total Balance</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody class="showData">
                             </tbody>
-                            <tr>
-                                <td colspan="7" style="text-align: right;"><strong>Total Balance:</strong></td>
-                                <td colspan="2" id="total-balance">0</td>
-                            </tr>
                         </table>
                     </div>
                 </div>
@@ -46,7 +40,7 @@
         </div>
     </div>
 
-    <!--Add Bank Modal -->
+    <!-- Modal -->
     <div class="modal fade" id="exampleModalLongScollable" tabindex="-1" aria-labelledby="exampleModalScrollableTitle"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
@@ -81,7 +75,7 @@
                             <span class="text-danger phone_number_error"></span>
                         </div>
                         <div class="mb-3 col-md-6">
-                            <label for="name" class="form-label">Account Number</label>
+                            <label for="name" class="form-label">Account </label>
                             <input id="defaultconfig" class="form-control account" maxlength="39" name="account"
                                 type="text" onkeyup="errorRemove(this);" onblur="errorRemove(this);">
                             <span class="text-danger account_error"></span>
@@ -108,7 +102,6 @@
             </div>
         </div>
     </div>
-
     {{-- //Edit Modal --}}
     <div class="modal fade" id="edit" tabindex="-1" aria-labelledby="exampleModalScrollableTitle"
         aria-hidden="true">
@@ -130,6 +123,7 @@
                             <label for="name" class="form-label">Branch Name</label>
                             <input id="defaultconfig" class="form-control edit_branch_name" maxlength="39"
                                 name="branch_name" type="text">
+
                         </div>
                         <div class="mb-3 col-md-6">
                             <label for="name" class="form-label">Manager Name/Owner Name</label>
@@ -144,7 +138,7 @@
 
                         </div>
                         <div class="mb-3 col-md-6">
-                            <label for="name" class="form-label">Account Number</label>
+                            <label for="name" class="form-label">Account</label>
                             <input id="defaultconfig" class="form-control edit_account" maxlength="39" name="account"
                                 type="text" onkeyup="errorRemove(this);" onblur="errorRemove(this);">
                             <span class="text-danger edit_account"></span>
@@ -154,7 +148,13 @@
                             <input id="defaultconfig" class="form-control edit_email" maxlength="39" name="email"
                                 type="email">
                         </div>
-
+                        {{-- <div class="mb-3 col-md-12">
+                            <label for="name" class="form-label">Opening Balance</label>
+                            <input id="defaultconfig" class="form-control edit_opening_balance" maxlength="39"
+                                name="opening_balance" type="number" onkeyup="errorRemove(this);"
+                                onblur="errorRemove(this);">
+                            <span class="text-danger edit_opening_balance_error"></span>
+                        </div> --}}
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -164,8 +164,47 @@
             </div>
         </div>
     </div>
-
-
+    <!-- Modal add balance -->
+    <div class="modal fade" id="bank_money_add" tabindex="-1" aria-labelledby="exampleModalScrollableTitle"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalScrollableTitle">Add Balane</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="btn-close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addBalaceForm" class="addBalaceForm row">
+                        <div class="mb-3 col-md-6">
+                            <label for="name" class="form-label">Balance Amount <span
+                                    class="text-danger">*</span></label>
+                            <input id="defaultconfig" type="number" class="form-control add_amount"
+                                name="update_balance" type="text" onkeyup="errorRemove(this);"
+                                onblur="errorRemove(this);">
+                            <span class="text-danger add_amount_error"></span>
+                        </div>
+                        <div class="mb-3 col-md-6">
+                            <label for="name" class="form-label">Purpose</label>
+                            <select class="form-control" name="purpose" id="">
+                                <option value="investment">Investment</option>
+                                <option value="loan">loan</option>
+                                <option value="borrow">Borrow</option>
+                                <option value="others">Others</option>
+                            </select>
+                        </div>
+                        <div class="mb-3 col-md-12">
+                            <label for="name" class="form-label">Note</label>
+                            <textarea class="form-control" name="note" id="" cols="30" rows="5"></textarea>
+                        </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary add_balance">Add Balace</button>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <script>
         // error remove
         function errorRemove(element) {
@@ -212,18 +251,12 @@
                                 showError('.opening_balance', res.error.opening_balance);
                             }
                         }
-                    },
-                    error: function(xhr, status, error) {
-                        // Display the custom error page when a server error occurs
-                        if (xhr.status === 500) {
-                            $('body').html(xhr.responseText);
-                        } else {
-                            // Handle other errors
-                            toastr.error('An error occurred. Please try again.');
-                        }
                     }
                 });
             })
+
+
+
 
             function bankView() {
                 // console.log('hello');
@@ -254,19 +287,21 @@
                                                 Manage
                                             </button>
                                             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                                <a href="#" class="dropdown-item add_money_modal_open" data-id=${bank.id} data-bs-toggle="modal" data-bs-target="#bank_money_add">
+                                                                        <i class="fas fa-money-bill"></i>
+                                                Add balance</a>
                                                 <a href="#" class="dropdown-item bank_edit" data-id=${bank.id} data-bs-toggle="modal" data-bs-target="#edit">
                                                     <i class="fa-solid fa-pen-to-square"></i>
                                                 Edit</a>
-                                                 ${bank?.latest_transaction?.purpose === "Bank" || !bank?.latest_transaction ? `<a href="#" class="dropdown-item bank_delete" data-id="${bank.id}"><i class="fa-solid fa-trash-can"></i> Delete</a>` : ""}
+                                                <a href="#"  class="dropdown-item bank_delete" data-id=${bank.id}>
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                Delete</a>
                                             </div>
                                         </div>
                                     </td>
                                 `;
                                 $('.showData').append(tr);
                             });
-                            const totalBalances = res.totalBalance ?? 0;
-                            document.getElementById('total-balance').innerText = totalBalances;
-
                         } else {
                             $('.showData').html(`
                             <tr>
@@ -414,42 +449,40 @@
                 let id = this.getAttribute('data-id');
                 $('.add_balance').val(id);
             })
-            // <a href="#" class="dropdown-item add_money_modal_open" data-id=${bank.id} data-bs-toggle="modal" data-bs-target="#bank_money_add">
-            //                                                             <i class="fas fa-money-bill"></i>
-            //                                     Add balance</a>
+
             //Add
-            // $('.add_balance').click(function(e) {
-            //     e.preventDefault();
-            //     let id = $(this).val();
-            //     // console.log(id);
-            //     let formData = new FormData($('#addBalaceForm')[0]);
-            //     $.ajaxSetup({
-            //         headers: {
-            //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            //         }
-            //     });
+            $('.add_balance').click(function(e) {
+                e.preventDefault();
+                let id = $(this).val();
+                // console.log(id);
+                let formData = new FormData($('#addBalaceForm')[0]);
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
 
-            //     $.ajax({
-            //         url: `/add/bank/balance/${id}`,
-            //         type: 'POST',
-            //         data: formData,
-            //         processData: false,
-            //         contentType: false,
-            //         success: function(res) {
-            //             if (res.status == 200) {
-            //                 $('#bank_money_add').modal('hide');
-            //                 $('#addBalaceForm')[0].reset();
-            //                 bankView();
-            //                 toastr.success(res.message);
-            //             } else {
-            //                 if (res.error.update_balance) {
-            //                     showError('.add_amount', res.error.update_balance);
-            //                 }
+                $.ajax({
+                    url: `/add/bank/balance/${id}`,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        if (res.status == 200) {
+                            $('#bank_money_add').modal('hide');
+                            $('#addBalaceForm')[0].reset();
+                            bankView();
+                            toastr.success(res.message);
+                        } else {
+                            if (res.error.update_balance) {
+                                showError('.add_amount', res.error.update_balance);
+                            }
 
-            //             }
-            //         }
-            //     });
-            // })
+                        }
+                    }
+                });
+            })
         });
     </script>
 @endsection

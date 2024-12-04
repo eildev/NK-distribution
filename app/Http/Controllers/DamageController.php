@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Repositories\RepositoryInterfaces\DamageInterface;
 use App\Models\Damage;
 use App\Models\Product;
-use App\Models\Stock;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
@@ -39,21 +38,20 @@ class DamageController extends Controller
         if ($validator->passes()) {
             $data = $request->all();
 
-            $product = Product::findOrFail($request->product_id);
+            $product_qty = Product::findOrFail($request->product_id);
+            $stock = $product_qty->stock;
             $damage = new Damage;
             $damage->product_id = $request->product_id;
             $damage->qty = $request->pc;
-            $product_price = $product->cost * $request->pc;
+            $product_price = $product_qty->cost * $request->pc;
             $damage->damage_cost = $product_price;
             $damage->branch_id = Auth::user()->branch_id;
             $formattedDate = date('Y-m-d H:i:s', strtotime($request->date));
             $damage->date = $formattedDate;
             $damage->note = $request->note;
             $damage->save();
-
-            $stock = Stock::where('branch_id',Auth::user()->branch_id)->where('product_id', $request->product_id)->first();
-            $stock->stock_quantity -= $request->pc;
-            $stock->save();
+            $product_qty->stock = $product_qty->stock - $request->pc;
+            $product_qty->save();
         }
         $notification = array(
             'message' => 'Damage Add Successfully',
@@ -71,7 +69,7 @@ class DamageController extends Controller
         if (Auth::user()->id == 1) {
             $damages = Damage::all();
         } else {
-            $damages = Damage::where('branch_id', Auth::user()->branch_id)->latest()->get();
+            $damages = Damage::where('branch_id', Auth::user()->branch_id)->latest()->get();;
         }
         return view('pos.damage.view_damage', compact('damages'));
     }
@@ -80,18 +78,11 @@ class DamageController extends Controller
      */
     public function ShowQuantity($id)
     {
-        $show_qty =  Product::with('unit')
-        ->withSum(['stockQuantity' => function ($query) {
-            // This ensures you're not filtering by branch_id
-                        $query->where('branch_id',  Auth::user()->branch_id); // or remove any condition on branch_id if not needed
-                    }], 'stock_quantity')
-                    ->having('stock_quantity_sum_stock_quantity', '>', 0)
-                    ->orderBy('stock_quantity_sum_stock_quantity', 'asc')
-                    ->findOrFail($id);
+        $show_qty = Product::with('unit')->findOrFail($id);
         return response()->json([
+
             'all_data' => $show_qty,
-            'unit' => $show_qty->unit,
-            'stock_quantity' => $show_qty->stock_quantity_sum_stock_quantity
+            'unit' => $show_qty->unit
         ]);
     }
     public function edit($id)
@@ -115,22 +106,9 @@ class DamageController extends Controller
 
             $product_qty = Product::findOrFail($request->product_id);
             // dd($request->all());
-
+            $stock = $product_qty->stock;
             $damage = Damage::findOrFail($id);
-
             $damage->product_id = $request->product_id;
-            $stock = Stock::where('branch_id',Auth::user()->branch_id)->where('product_id', $request->product_id)->first();
-            // dd($damage->qty, $request->pc);
-            if ($damage->qty > $request->pc) {
-                $updatedValue = $damage->qty - $request->pc;
-                $stock->stock_quantity += $updatedValue;
-            } elseif ( $damage->qty <  $request->pc) {
-                $updatedValue2 = $request->pc - $damage->qty;
-                $stock->stock_quantity -= $updatedValue2;
-            }else{
-                $stock->stock_quantity = $stock->stock_quantity;
-            }
-            $stock->save();
             $damage->qty = $request->pc;
             $product_price = $product_qty->cost * $request->pc;
             $damage->damage_cost = $product_price;
@@ -138,8 +116,10 @@ class DamageController extends Controller
             $formattedDate = date('Y-m-d H:i:s', strtotime($request->date));
             $damage->date = $formattedDate;
             $damage->note = $request->note;
-           $damage->update();
-           }
+            $damage->update();
+            $product_qty->stock = $product_qty->stock - $request->pc;
+            $product_qty->save();
+        }
 
         $notification = array(
             'message' => 'Damage Update Successfully',
@@ -151,12 +131,9 @@ class DamageController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($damage_id, $product_id)
+    public function destroy($id)
     {
-        $damage_info = Damage::findOrFail($damage_id);
-        $stock = Stock::where('product_id', $product_id)->first();
-        $stock->stock_quantity += $damage_info->qty;
-        $stock->save();
+        $damage_info = Damage::findOrFail($id);
         $damage_info->delete();
         $notification = array(
             'message' => 'Damage Deleted successfully',

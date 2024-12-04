@@ -33,7 +33,11 @@
                                     @foreach ($customers as $key => $customer)
                                         <tr>
                                             <td>{{ $key + 1 }}</td>
-                                            <td>{{ $customer->name ?? '' }}</td>
+                                            <td>
+                                                <a href="{{ route('customer.profile', $customer->id) }}">
+                                                    {{ $customer->name ?? '' }}
+                                                </a>
+                                            </td>
                                             <td>{{ $customer->phone ?? '' }}</td>
                                             <td>{{ $customer['branch']['name'] ?? '' }}</td>
                                             <td>
@@ -84,12 +88,10 @@
                                     <tr>
                                         <td colspan="12">
                                             <div class="text-center text-warning mb-2">Data Not Found</div>
-                                            @if (Auth::user()->can('customer.add'))
                                             <div class="text-center">
                                                 <a href="{{ route('customer.add') }}" class="btn btn-primary">Add
                                                     Customer<i data-feather="plus"></i></a>
                                             </div>
-                                            @endif
                                         </td>
                                     </tr>
                                 @endif

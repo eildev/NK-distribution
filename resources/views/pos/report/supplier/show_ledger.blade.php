@@ -19,7 +19,9 @@
             </table>
         </div>
     </div>
+
     <h4 class="my-3 text-center">Supplier Ledger</h4>
+
     <div class="container-fluid w-100">
         <div class="row">
             <div class="col-md-12">
@@ -48,6 +50,7 @@
                                     <td colspan="5">No Data Found</td>
                                 </tr>
                             @endif
+
                         </thead>
                     </table>
                 </div>
@@ -57,5 +60,5 @@
 @endif
 <div class="container-fluid w-100 btn_group">
     <a href="javascript:;" class="btn btn-outline-primary float-end mt-4" onclick="window.print();"><i
-    data-feather="printer" class="me-2 icon-md"></i>Print</a>
+            data-feather="printer" class="me-2 icon-md"></i>Print</a>
 </div>

@@ -10,13 +10,13 @@
     <div class="row">
         <div class="col-md-12 grid-margin stretch-card d-flex justify-content-end">
             <div class="">
-                <h4 class="text-right"><a href="{{ route('report.sms') }}" class="btn btn-info">SMS To Customer</a></h4>
+                <h4 class="text-right"><a href="{{ route('employee.view') }}" class="btn btn-info">SMS To Customer</a></h4>
             </div>
         </div>
         <div class="col-md-12 stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h6 class="card-title text-info">SMS Marketing</h6>
+                    <h6 class="card-title text-info">Add Employee</h6>
                     <div class="row">
                         <div class="col-lg-6">
                             <h4>Choose Customer</h4>
@@ -38,11 +38,7 @@
                                 </thead>
                                 <tbody class="showCustomer">
                                     @php
-                                     if(Auth::user()->id == 1){
-                                    $customers = App\Models\Customer::get();
-                                    }else{
-                                        $customers = App\Models\Customer::where('branch_id', Auth::user()->branch_id)->get();
-                                    }
+                                        $customers = App\Models\Customer::get();
                                     @endphp
                                     @forelse ($customers as $customer)
                                         <tr>

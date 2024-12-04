@@ -5,7 +5,7 @@
     <nav class="page-breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item active" aria-current="page">View Products</li>
+            <li class="breadcrumb-item active" aria-current="page">Manage Products</li>
         </ol>
     </nav>
     <div class="row">
@@ -14,33 +14,110 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="card-title">Product Table</h6>
-                        @if (Auth::user()->can('products.add'))
                         <a href="{{ route('product') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add
                             Product</a>
-                        @endif
                     </div>
                     <div class="table-responsive">
-                        <table id="products-table" class="display table table-striped table-bordered" style="width:100%">
+                        <table id="example" class="table">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
+                                    <th>SN</th>
                                     <th>Image</th>
-                                    <th>Price</th>
-                                    <th>Barcode</th>
+                                    <th>Name</th>
+                                    @if ($barcode == 1)
+                                        <th>Barcode</th>
+                                    @endif
                                     <th>Category</th>
-                                    <th>Subcategory</th>
                                     <th>Brand</th>
-                                    <th>Cost</th>
-                                    <th>Total Sold</th>
-                                    <th>Color</th>
-                                    <th>Size</th>
-                                    <th>Unit</th>
-                                    <th>Action</th> <!-- This should be sufficient for your actions -->
+                                    <th>Cost Price</th>
+                                    <th>Sale Price</th>
+                                    <th>Stock</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
-
                             <tbody>
+                                @if ($products->count() > 0)
+                                    @foreach ($products as $key => $product)
+                                        <tr>
+                                            <td>{{ $key + 1 }}</td>
+                                            <td>
+                                                <img src="{{ $product->image ? asset('uploads/product/' . $product->image) : asset('dummy/image.jpg') }}"
+                                                    alt="product image">
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('product.ledger', $product->id) }}">
+                                                    {{ $product->name ?? '' }}
+                                                </a>
+                                            </td>
+                                            @if ($barcode == 1)
+                                                <td>{{ $product->barcode }}</td>
+                                            @endif
+                                            <td>{{ $product->category->name ?? '' }}</td>
+                                            <td>{{ $product->brand->name ?? '' }}</td>
+                                            <td>{{ $product->cost ?? 0 }}</td>
+                                            <td>{{ $product->price ?? 0 }}</td>
+                                            <td>{{ $product->stock ?? 0 }} ({{ $product->unit->name ?? '' }})</td>
+                                            <td>
+                                                @if (Auth::user()->can('products.edit'))
+                                                    <a href="{{ route('product.edit', $product->id) }}"
+                                                        class="btn btn-primary btn-icon">
+                                                        <i data-feather="edit"></i>
+                                                    </a>
+                                                @endif
+                                                @if (Auth::user()->can('products.delete'))
+                                                    <a href="{{ route('product.destroy', $product->id) }}"
+                                                        class="btn btn-danger btn-icon" id="delete">
+                                                        <i data-feather="trash-2"></i>
+                                                    </a>
+                                                @endif
+                                                @if ($barcode == 1)
+                                                    <a target="_blank" href="{{ route('product.barcode', $product->id) }}"
+                                                        class="btn btn-info btn-icon">
+                                                        <i class="fa-solid fa-barcode"></i>
+                                                    </a>
+                                                @endif
+                                                {{-- <a href="#"  data-bs-toggle="modal" data-bs-target="#exampleModal{{$product->id}}" class="input-text btn border-dark">
+                                                    <i class="fa-solid fa-barcode"></i>
+                                                </a> --}}
+                                            </td>
+                                        </tr>
+
+                                        {{-- /Modal Start/ --}}
+                                        <!-- Button trigger modal -->
+
+                                        <!-- Modal -->
+                                        {{-- <div class="modal fade modal-lg" id="exampleModal{{$product->id}}"  tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center border">
+                        <div class="row">
+                        @for ($i = 0; $i < $product->stock; $i++)
+                        <div class="col-md-4">
+                        <div class="barcode-container">
+                            <span class="dblock">
+                            {!! DNS1D::getBarcodeHTML($product->barcode, 'PHARMA') !!}</span><br>
+                            <span style="">{{$product->barcode}}</span><br>
+                            <span>{{ $product->name ?? '' }} </span><br>
+                            <span class="bold">{{ $product->price ?? 0 }}TK</span>
+                        </div>
+                    </div>
+                        @endfor
+                    </div>
+                </div>
+                    <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button onclick="printModalContent('modalContent{{$product->id}}')" class="btn btn-primary">Print</button>
+                    </div>
+                </div>
+                </div>
+            </div> --}}
+                                        {{-- /Modal End/ --}}
+                                    @endforeach
+                                @endif
+
                             </tbody>
                         </table>
                     </div>
@@ -71,60 +148,4 @@
             display: inline-block;
         }
     </style>
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $('#products-table').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: '{{ route('product.view') }}', // Your route to get the products data
-                columns: [
-                    { data: 'id', name: 'id' },
-                    { data: 'name', name: 'name' },
-                    { data: 'image', name: 'image', orderable: false, searchable: false },
-                    { data: 'price', name: 'price' },
-                    { data: 'barcode', name: 'quantity' },
-                    { data: 'category_name', name: 'category_name' },
-                    { data: 'subcategory_name', name: 'subcategory_name' },
-                    { data: 'brand_name', name: 'brand_name' },
-                    { data: 'cost', name: 'cost' },
-                    { data: 'total_sold', name: 'total_sold' },
-                    { data: 'color', name: 'color' },
-                    { data: 'size_name', name: 'size_name' },
-                    { data: 'unit_name', name: 'unit_name' },
-                    { data: 'action', name: 'action', orderable: false, searchable: false } // Action buttons
-                ]
-            });
-        });
-
-        //Sweet Alert
-        function confirmDelete(productId) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            $.ajax({
-                url: '/product/destroy/' + productId,
-                type: 'GET',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                },
-                success: function(response) {
-                    Swal.fire('Deleted!', 'Your product has been deleted.', 'success');
-                    location.reload();
-
-                },
-                error: function(response) {
-                    Swal.fire('Error!', 'There was a problem deleting the product.', 'error');
-                }
-            });
-        }
-    });
-}
-    </script>
 @endsection

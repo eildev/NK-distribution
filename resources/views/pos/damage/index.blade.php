@@ -4,9 +4,7 @@
     <div class="row">
         <div class="col-md-12 grid-margin stretch-card d-flex justify-content-end">
             <div class="">
-                @if (Auth::user()->can('damage.list'))
                 <h4 class="text-right"><a href="{{ route('damage.view') }}" class="btn btn-info">All Damage History</a></h4>
-                @endif
             </div>
         </div>
         <div class="col-md-12 stretch-card">
@@ -19,22 +17,15 @@
                             <!-- Col -->
                             <div class="mb-3 col-md-6">
                                 @php
-                                    $products = App\Models\Product::withSum(['stockQuantity as stock_quantity_sum' => function ($query) {
-                                        $query->where('branch_id', Auth::user()->branch_id);
-                                    }], 'stock_quantity')
-                                    ->having('stock_quantity_sum', '>', 0) // Use having method here
-                                    ->orderBy('stock_quantity_sum', 'asc')
-                                    ->get();
-                                    // $products = App\Models\Product::get();
+                                    $products = App\Models\Product::get();
                                 @endphp
-                                <label for="ageSelect" class="form-label">Products <span class="text-danger">*</span></label>
+                                <label for="ageSelect" class="form-label">Product <span class="text-danger">*</span></label>
                                 <select class="js-example-basic-single form-select" name="product_id" data-width="100%"
                                     onchange="show_quantity(this)">
                                     @if ($products->count() > 0)
                                         <option selected disabled>Select Damaged Product</option>
                                         @foreach ($products as $product)
-                                            <option value="{{ $product->id }}">{{ $product->name }} (
-                                                {{$product->stock_quantity_sum}}
+                                            <option value="{{ $product->id }}" {{ old('product_id') == $product->id ? 'selected' : '' }}>{{ $product->name }} ({{ $product->stock }}
                                                 {{ $product->unit->name }})</option>
                                         @endforeach
                                     @else
@@ -95,7 +86,7 @@
                 url: '/damage/show_quantity/' + newValue,
                 type: 'get',
                 success: function(res) {
-                    $('#show_stock').text(res.stock_quantity);
+                    $('#show_stock').text(res.all_data.stock);
                     $('#show_unit').text(res.unit.name);
                     $('#damageQty').removeAttr('disabled');
                 }

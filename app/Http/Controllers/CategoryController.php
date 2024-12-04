@@ -34,7 +34,6 @@ class CategoryController extends Controller
             }
             $category->name =  $request->name;
             $category->slug = Str::slug($request->name);
-            $category->status = 1;
             $category->save();
             return response()->json([
                 'status' => 200,
@@ -107,7 +106,6 @@ class CategoryController extends Controller
     }
     public function status($id)
     {
-        // dd($id);
         $category = Category::findOrFail($id);
         $newStatus = $category->status == 0 ? 1 : 0;
         $category->update([

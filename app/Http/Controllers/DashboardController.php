@@ -22,9 +22,9 @@ class DashboardController extends Controller
     {
         // today summary
         $branchData = [];
-        $banks = Bank::all();
+        $banks = Bank::get();
         if (Auth::user()->id == 1) {
-            $branches = Branch::all();
+            $branches = Branch::get();
             foreach ($branches as $branch) {
                 $branchId = $branch->id;
                 $viaSale = ViaSale::where('branch_id', $branchId)
@@ -294,10 +294,10 @@ class DashboardController extends Controller
 
         // Total Summary
         if (Auth::user()->id == 1) {
-            $sales = Sale::all();
-            $purchase = Purchase::all();
-            $expanse = Expense::all();
-            $salary = EmployeeSalary::all();
+            $sales = Sale::get();
+            $purchase = Purchase::get();
+            $expanse = Expense::get();
+            $salary = EmployeeSalary::get();
             $bankLabels = [];
             $grandTotal = 0;
             foreach ($banks as $bank) {
@@ -317,7 +317,6 @@ class DashboardController extends Controller
 
             $totalCustomerDue = $sales->sum('change_amount') - $sales->sum('paid');
             $totalSupplierDue = $purchase->sum('sub_total') - $purchase->sum('paid');
-            $totalBonus = $sales->sum('actual_discount');
         } else {
             $sales = Sale::where('branch_id', Auth::user()->branch_id)->get();
             $purchase = Purchase::where('branch_id', Auth::user()->branch_id)->get();
@@ -343,7 +342,6 @@ class DashboardController extends Controller
 
             $totalCustomerDue = $sales->sum('change_amount') - $sales->sum('paid');
             $totalSupplierDue = $purchase->sum('sub_total') - $purchase->sum('paid');
-            $totalBonus = $sales->sum('actual_discount');
         }
 
         // weekly update Chart
@@ -462,7 +460,6 @@ class DashboardController extends Controller
             'grandTotal',
             'totalCustomerDue',
             'totalSupplierDue',
-            'totalBonus',
 
             // weekly summary 
             'salesByDay',

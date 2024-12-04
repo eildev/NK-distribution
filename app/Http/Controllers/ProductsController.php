@@ -2,21 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Imports\BrandImport;
-use App\Imports\CategoryImport;
 use App\Models\PosSetting;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\PromotionDetails;
+use App\Models\PurchaseItem;
+use App\Models\SaleItem;
 // use Validator;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\ProductsImport;
-use App\Imports\SubcategoryImport;
-use App\Jobs\ImportExcelDataJob;
-use DataTables;
 
 class ProductsController extends Controller
 {
@@ -26,7 +22,7 @@ class ProductsController extends Controller
     }
     public function store(Request $request)
     {
-
+        // dd($request->all());
         $validator = Validator::make($request->all(), [
             'name' => 'required|max:255',
             'category_id' => 'required|integer',
@@ -57,11 +53,14 @@ class ProductsController extends Controller
             $product->brand_id  =  $request->brand_id;
             $product->cost  =  $request->cost;
             $product->price  =  $request->price;
-            $product->details =  $request->details;
+            $product->details  =  $request->details;
             $product->color  =  $request->color;
             $product->unit_id  =  $request->unit_id;
             if ($request->size_id !== 'Please add Size') {
                 $product->size_id  =  $request->size_id;
+            }
+            if ($request->stock) {
+                $product->stock  =  $request->stock;
             }
             if ($request->main_unit_stock) {
                 $product->main_unit_stock  =  $request->main_unit_stock;
@@ -83,73 +82,41 @@ class ProductsController extends Controller
             ]);
         }
     }
+     // product manage 
     public function view()
     {
-        return view('pos.products.product.product-show');
+        $category = Category::where('slug', 'via-sell')->first();
+        $query = Product::orderBy('stock', 'asc');
+
+        if (Auth::user()->id != 1) {
+            $query->where('branch_id', Auth::user()->branch_id);
+        }
+
+        if ($category) {
+            $query->where('category_id', '!=', $category->id);
+        }
+
+        $products = $query->get();
+
+        return view('pos.products.product.product-show', compact('products'));
     }
 
-    public function getData(Request $request)
+    // via product 
+    public function viaProductsView()
     {
-
-        // Check if the user is an admin (user id == 1)
+        $category = Category::where('slug', 'via-sell')->first();
         if (Auth::user()->id == 1) {
-            // Fetch all products with stock quantity sum and relationships
-            $products = Product::with(['category', 'brand', 'unit', 'subcategory', 'size'])
-                ->withSum('stockQuantity', 'stock_quantity')
-                ->latest();
+            $products = Product::where('category_id', $category->id)->latest()->get();
         } else {
-            // Fetch only products for the logged-in user's branch with relationships
             $products = Product::where('branch_id', Auth::user()->branch_id)
-                ->with(['category', 'brand', 'unit', 'subcategory', 'size'])
-                ->withSum('stockQuantity', 'stock_quantity')
-                ->latest();
+                ->where('category_id', $category->id)
+                ->latest()
+                ->get();
         }
 
-        // Check if the request is an AJAX call (DataTables request)
-        if ($request->ajax()) {
-            return DataTables::of($products)
-
-                ->addColumn('category_name', function ($product) {
-                    return $product->category->name ?? 'N/A'; // Show category name
-                })
-                ->addColumn('image', function ($product) {
-                    return '<img src="' . asset('uploads/product/' . $product->image) . '" alt="Product Image" style="width: 50px; height: auto;">';
-                })
-                ->addColumn('brand_name', function ($product) {
-                    return $product->brand->name ?? 'N/A'; // Show brand name
-                })
-                ->addColumn('subcategory_name', function ($product) {
-                    return $product->subcategory->name ?? 'N/A'; // Add subcategory name
-                })
-                ->addColumn('size_name', function ($product) {
-                    return $product->size->name ?? 'N/A'; // Show unit name
-                })
-                ->addColumn('unit_name', function ($product) {
-                    return $product->unit->name ?? 'N/A'; // Show unit name
-                })
-                ->addColumn('action', function ($product) {
-                    $viewBtn = '<a href="' . route('product.find', $product->id) . '" class="btn btn-sm btn-success">View</a>';
-                    $editBtn = '';
-                    if (Auth::user()->can('products.edit')) {
-                        $editBtn = '<a href="' . route('product.edit', $product->id) . '" class="btn btn-sm btn-primary">Edit</a>';
-                    }
-                    // $deleteBtn = '';
-                    // if (Auth::user()->can('products.delete')) {
-                    //     $deleteBtn = '<a href="'.route('product.destroy', $product->id).'" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure?\')">Delete</a>';
-                    // }
-                    $deleteBtn = Auth::user()->can('products.delete')
-                        ? '<a href="javascript:void(0);" class="btn btn-sm btn-danger" onclick="confirmDelete(' . $product->id . ')">Delete</a>'
-                        : '';
-                    return $viewBtn . ' ' . $editBtn . ' ' . $deleteBtn; // Concatenating the buttons
-                })
-                ->rawColumns(['image', 'action']) // Allow HTML in 'image' and 'action' columns
-                ->make(true);
-        }
-
-        return view('pos.products.product.product-show');
+        return view('pos.products.product.via_products', compact('products'));
     }
-
-
+    
     public function edit($id)
     {
         $product = Product::findOrFail($id);
@@ -184,6 +151,9 @@ class ProductsController extends Controller
             $product->color  =  $request->color;
             $product->size_id  =  $request->size_id;
             $product->unit_id  =  $request->unit_id;
+            if ($request->stock) {
+                $product->stock  =  $request->stock;
+            }
             if ($request->main_unit_stock) {
                 $product->main_unit_stock  =  $request->main_unit_stock;
             }
@@ -254,122 +224,89 @@ class ProductsController extends Controller
     {
         $product = Product::where('search_value');
 
-        if (Auth::user()->id == 1) {
-            $products = Product::withSum('stockQuantity', 'stock_quantity')->where('name', 'LIKE', '%' . $search_value . '%')
-                ->orWhere('details', 'LIKE', '%' . $search_value . '%')
-                ->orWhere('price', 'LIKE', '%' . $search_value . '%')
-                ->orWhereHas('category', function ($query) use ($search_value) {
-                    $query->where('name', 'LIKE', '%' . $search_value . '%');
-                })
-                ->orWhereHas('subcategory', function ($query) use ($search_value) {
-                    $query->where('name', 'LIKE', '%' . $search_value . '%');
-                })
-                ->orWhereHas('brand', function ($query) use ($search_value) {
-                    $query->where('name', 'LIKE', '%' . $search_value . '%');
-                })
+        $products = Product::where('name', 'LIKE', '%' . $search_value . '%')
+            ->orWhere('details', 'LIKE', '%' . $search_value . '%')
+            ->orWhere('price', 'LIKE', '%' . $search_value . '%')
+            ->orWhereHas('category', function ($query) use ($search_value) {
+                $query->where('name', 'LIKE', '%' . $search_value . '%');
+            })
+            ->orWhereHas('subcategory', function ($query) use ($search_value) {
+                $query->where('name', 'LIKE', '%' . $search_value . '%');
+            })
+            ->orWhereHas('brand', function ($query) use ($search_value) {
+                $query->where('name', 'LIKE', '%' . $search_value . '%');
+            })
 
-                ->get();
-        } else {
-            $products = Product::where('branch_id', Auth::user()->branch_id)
-                ->withSum('stockQuantity', 'stock_quantity')
-                ->where('name', 'LIKE', '%' . $search_value . '%')
-                ->orWhere('details', 'LIKE', '%' . $search_value . '%')
-                ->orWhere('price', 'LIKE', '%' . $search_value . '%')
-                ->orWhereHas('category', function ($query) use ($search_value) {
-                    $query->where('name', 'LIKE', '%' . $search_value . '%');
-                })
-                ->orWhereHas('subcategory', function ($query) use ($search_value) {
-                    $query->where('name', 'LIKE', '%' . $search_value . '%');
-                })
-                ->orWhereHas('brand', function ($query) use ($search_value) {
-                    $query->where('name', 'LIKE', '%' . $search_value . '%');
-                })
-
-                ->get();
-        }
+            ->get();
 
         return response()->json([
             'products' => $products,
             'status' => 200
         ]);
     }
-    public function importProduct()
+
+    // product Ledger
+    public function productLedger($id)
     {
-        return view('pos.products.product.product-import');
-    }
+        $data = Product::findOrFail($id);
+        $sales = SaleItem::where('product_id', $id)->get();
+        $purchases = PurchaseItem::where('product_id', $id)->get();
 
-    /////////////////////// Products Import Data //////////////////////
+        // Combine sales and purchases into one array
+        $transactions = [];
 
-    public function ImportExcelData(Request $request)
-    {
-        $request->validate([
-            'import_file' => [
-                'required',
-                'file'
-            ]
-        ]);
-
-        try {
-            // Attempt to import the Excel file
-            Excel::import(new ProductsImport, $request->file('import_file'));
-
-            // Success notification
-            $notification = array(
-                'message' => 'Products imported successfully.',
-                'alert-type' => 'info'
-            );
-        } catch (\Exception $e) {
-            // Handle any errors that occurred during the import
-            $notification = array(
-                'warning' => 'Error importing products: ' . $e->getMessage(),
-                'alert-type' => 'info'
-            );
+        foreach ($sales as $sale) {
+            $transactions[] = [
+                'date' => $sale->created_at,
+                'type' => 'sale', // Identifies as a sale
+                'transaction' => $sale, // Store the sale object
+            ];
         }
 
-        return redirect()->back()->with($notification);
-    }
+        foreach ($purchases as $purchase) {
+            $transactions[] = [
+                'date' => $purchase->created_at,
+                'type' => 'purchase', // Identifies as a purchase
+                'transaction' => $purchase, // Store the purchase object
+            ];
+        }
 
-    /////////////////////// Category Import Data //////////////////////
+        // Sort by date
+        usort($transactions, function ($a, $b) {
+            return strtotime($a['date']) - strtotime($b['date']);
+        });
 
-    public function importCategoryExcelData(Request $request)
-    {
-        // dd($request->all());
-        Excel::import(new CategoryImport, $request->file('category-import_file'));
-        $notification = array(
-            'message' => 'Category imported successfully.',
-            'alert-type' => 'info'
-        );
-        return redirect()->back()->with($notification);
-    }
+        // Initialize report
+        $reports = [];
+        $balance = 0;
 
-    /////////////////////// Category Import Data //////////////////////
+        // Loop through combined transactions
+        foreach ($transactions as $item) {
+            if ($item['type'] == 'sale') {
+                // Sale transaction
+                $sale = $item['transaction'];
+                $reports[] = [
+                    'date' => $sale->created_at,
+                    'particulars' => 'Sale',
+                    'stockIn' => 0, // No stock coming in during a sale
+                    'stockOut' => $sale->qty, // Quantity sold
+                    'balance' => $balance - $sale->qty, // Decrease balance
+                ];
+                $balance -= $sale->qty;
+            } elseif ($item['type'] == 'purchase') {
+                // Purchase transaction
+                $purchase = $item['transaction'];
+                $reports[] = [
+                    'date' => $purchase->created_at,
+                    'particulars' => 'Purchase',
+                    'stockIn' => $purchase->quantity, // Quantity purchased
+                    'stockOut' => 0, // No stock going out during a purchase
+                    'balance' => $balance + $purchase->quantity, // Increase balance
+                ];
+                $balance += $purchase->quantity;
+            }
+        }
 
-    public function importSubcategoryExcelData(Request $request)
-    {
-        Excel::import(new SubcategoryImport, $request->file('subcategory-import_file'));
-        $notification = array(
-            'message' => 'Category imported successfully.',
-            'alert-type' => 'info'
-        );
-        return redirect()->back()->with($notification);
-    }
-
-    ///////////////////////Brand Import Data //////////////////////
-
-    public function importBrandExcelData(Request $request)
-    {
-        $request->validate([
-            'brand-import_file' => [
-                'required',
-                'file'
-            ]
-        ]);
-
-        Excel::import(new BrandImport, $request->file('brand-import_file'));
-        $notification = array(
-            'message' => 'Brand imported successfully.',
-            'alert-type' => 'info'
-        );
-        return redirect()->back()->with($notification);
+        return view('pos.products.product-ledger.product-ledger', compact('data', 'reports'));
     }
 }

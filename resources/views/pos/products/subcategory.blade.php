@@ -13,18 +13,16 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="card-title">Sub Category Table</h6>
-                        @if (Auth::user()->can('subcategory.add'))
                         <button class="btn btn-rounded-primary btn-sm" data-bs-toggle="modal"
                             data-bs-target="#exampleModalLongScollable"><i data-feather="plus"></i></button>
-                        @endif
                     </div>
                     <div id="" class="table-responsive">
                         <table class="table">
                             <thead>
                                 <tr>
                                     <th>SN</th>
-                                    <th>Sub Category Name</th>
                                     <th>Category Name</th>
+                                    <th>Sub Category Name</th>
                                     <th>Image</th>
                                     <th>Status</th>
                                     <th>Action</th>
@@ -241,31 +239,25 @@
                                 ${index+1}
                             </td>
                             <td>
-                                ${subcategory.name ?? ""}
+                        ${subcategory.category ? subcategory.category.name : ""}
                             </td>
                             <td>
-                                ${subcategory.category ? subcategory.category.name : ""}
+                                ${subcategory.name ?? ""}
                             </td>
                             <td>
                                 <img src="${subcategory.image ? `${url}/uploads/subcategory/` + subcategory.image : `${url}/dummy/image.jpg`}" alt="cat Image">
                             </td>
                             <td>
-                               <button id="subcategoryButton_${subcategory.id}" class="subcategoryButton btn ${subcategory.status != 0 ? 'btn-success' : 'btn-danger' } categoryButton"
-                                data-id="${subcategory.id}">${subcategory.status != 0 ? 'Active' : 'Inactive'}</button>
-
-
+                                <button id="subcategoryButton_${subcategory.id}" class="btn btn-success subcategoryButton"
+                        data-id="${subcategory.id}">Active</button>
                             </td>
                             <td>
-                                @can('subcategory.edit')
                                 <a href="#" class="btn btn-primary btn-icon subcategory_edit" data-id=${subcategory.id} data-bs-toggle="modal" data-bs-target="#edit">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </a>
-                                 @endcan
-                                 @can('subcategory.delete')
                                 <a href="#" class="btn btn-danger btn-icon subcategory_delete" data-id=${subcategory.id}>
                                     <i class="fa-solid fa-trash-can"></i>
                                 </a>
-                                 @endcan
                             </td>
                             `;
                             $('.showData').append(tr);
@@ -404,7 +396,7 @@
             $(document).ready(function() {
                 $('.showData').on('click', '.subcategoryButton', function() {
                     var subcategoryId = $(this).data('id');
-                    // alert(subcategoryId);
+                    // alert(categoryId);
                     $.ajax({
                         url: '/subcategory/status/' + subcategoryId,
                         type: 'POST',

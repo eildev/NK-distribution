@@ -39,9 +39,8 @@ class Product extends Model
     {
         return $this->hasMany(PurchaseItem::class, 'product_id');
     }
-    public function stockQuantity()
+    function branch()
     {
-        return $this->hasMany(Stock::class, 'product_id');
+        return $this->belongsTo(Branch::class, 'branch_id', 'id');
     }
-    
 }

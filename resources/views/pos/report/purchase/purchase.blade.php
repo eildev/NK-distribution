@@ -46,11 +46,7 @@
                             </div>
                         </div>
                         @php
-                         if(Auth::user()->id == 1){
-                                $products = App\Models\Product::all();
-                            }else{
-                                $products = App\Models\Product::where('branch_id', Auth::user()->branch_id)->get();
-                            }
+                            $products = App\Models\Product::all();
                         @endphp
                         <div class="col-md-3">
                             <div class=" input-group flatpickr" id="flatpickr-date">

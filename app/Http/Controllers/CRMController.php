@@ -13,7 +13,6 @@ use App\Jobs\SendBulkEmails;
 use App\Models\Sms;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Auth;
 
 class CRMController extends Controller
 {
@@ -179,11 +178,8 @@ class CRMController extends Controller
     }
     public function CustomerlistView()
     {
-        if(Auth::user()->id == 1){
-            $customer =  Customer::all();
-        }else{
-            $customer =  Customer::where('branch_id', Auth::user()->branch_id)->latest()->get();
-        }
+        $customer =  Customer::all();
+        // $customer =  Customer::latest()->get();
         return view('pos.crm.customize_customer.customize_customer', compact('customer'));
     } //
     public function CustomerlistFilterView(Request $request)

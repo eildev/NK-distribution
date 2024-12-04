@@ -1,15 +1,5 @@
 @extends('master')
 @section('admin')
-    @php
-        $branch = App\Models\Branch::findOrFail($sale->branch_id);
-        $customer = App\Models\Customer::findOrFail($sale->customer_id);
-        $products = App\Models\SaleItem::where('sale_id', $sale->id)->get();
-        // dd($products);
-    @endphp
-
-    <style>
-
-    </style>
     <div class="row ">
         <div class="col-md-12 ">
             <div class="card border-0 shadow-none invoice_bg">
@@ -21,7 +11,7 @@
                                     <a href="#" class="noble-ui-logo logo-light d-block mt-3">{{ $siteTitle }}</a>
                                 @elseif($invoice_logo_type == 'Logo')
                                     @if (!empty($logo))
-                                        <img class="margin_left_m_14" height="90" width="150" src="{{ url($logo) }}"
+                                        <img class="margin_left_m_14" height="100" width="200" src="{{ url($logo) }}"
                                             alt="logo">
                                     @else
                                         <p class="mt-1 mb-1 show_branch_name"><b>{{ $siteTitle }}</b></p>
@@ -39,27 +29,16 @@
                             <p class="show_branch_address w_40">{{ $address ?? 'Banasree' }}</p>
                             <p class="show_branch_address">{{ $phone ?? '' }}, 01708008705, 01720389177</p>
                             <p class="show_branch_address">{{ $email ?? '' }}</p>
-
-
-
                             <!--<hr>-->
-
-
-                            <p class="mt-2 mb-1 show_supplier_name"><span>Customer Name:</span>
+                            <p class="mt-4 mb-1 show_supplier_name"><span>Customer Name:</span>
                                 <b>{{ $customer->name ?? '' }}</b>
                             </p>
-                            @if ($customer->address)
-                                <p class="show_supplier_address"><span>Address:</span> {{ $customer->address ?? '' }}</p>
-                            @endif
-                            @if ($customer->email)
-                                <p class="show_supplier_email"><span>Email:</span> {{ $customer->email ?? '' }}</p>
-                            @endif
                             <p class="show_supplier_phone"><span>Phone:</span> {{ $customer->phone ?? '' }}</p>
 
                         </div>
                         <div class="col-lg-3 pe-0 text-end">
                             <h4 class="fw-bolder text-uppercase text-end mt-4 mb-2">invoice</h4>
-                            <h6 class="text-end mb-5 pb-4"># INV-{{ $sale->invoice_number ?? 0 }}</h6>
+                            <h6 class="text-end mb-5 pb-4">#SALE-{{ $sale->invoice_number ?? 0 }}</h6>
                             @if ($sale->due > 0)
                                 <p class="text-end mb-1 mt-5">Due</p>
                                 <h4 class="text-end fw-normal text-danger">৳ {{ $sale->due ?? 00.0 }}</h4>
@@ -72,7 +51,7 @@
                         </div>
                     </div>
                     <img src="{{ asset('assets/images/stamp.png') }}" class="img-fluid stamp-image" alt="">
-                    <div class="container-fluid mt-2 d-flex justify-content-center w-100">
+                    <div class="container-fluid mt-4 d-flex justify-content-center w-100">
                         <div class="w-100">
                             {{-- @dd($products); --}}
 
@@ -94,7 +73,10 @@
                                         @foreach ($products as $index => $product)
                                             <tr class="text-end">
                                                 <td class="text-start">{{ $index + 1 }}</td>
-                                                <td class="text-start">{{ $product->product->name ?? '' }}</td>
+                                                <td class="text-start">
+                                                    <a
+                                                        href="{{ route('product.ledger', $product->product_id) }}">{{ $product->product->name ?? '' }}</a>
+                                                </td>
                                                 <td>{{ $product->wa_duration ?? 0 }}</td>
                                                 <td>{{ $product->rate ?? 0 }}</td>
                                                 <td>{{ $product->qty ?? 0 }}</td>
@@ -172,7 +154,6 @@
                                                         {{ $previousDueFormatted }} </td>
                                                 </tr>
                                             @endif
-
                                             <tr>
                                                 <td class="text-bold-800">Grand Total</td>
                                                 <td class="text-bold-800 text-end">৳
@@ -219,24 +200,38 @@
                                             @endif
 
                                         </tbody>
+
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="container-fluid w-100 btn_group">
+                        @if ($sale->returned == 0)
+                            <a href="{{ route('return', $sale->id) }}" class="btn btn-outline-primary float-left mt-4">
+                                <i style="transform: rotate(90deg);" class="fa-solid fa-arrow-turn-down me-2"></i> Return
+                            </a>
+                        @endif
+                        <!--Print Invoice--->
                         @if ($invoice_type == 'a4')
                             <a href="#" class="btn btn-outline-primary float-end mt-4 me-3"
                                 onclick="window.print();"><i data-feather="printer" class="me-2 icon-md"></i>Print
-                                Invoice</a>
+                                Invoice
+                            </a>
                         @elseif($invoice_type == 'a5')
                             <a href="#" class="btn btn-outline-primary float-end mt-4" onclick="window.print();"><i
-                                    data-feather="printer" class="me-2 icon-md"></i>Print Invoice</a>
+                                    data-feather="printer" class="me-2 icon-md"></i>Print Invoice
+                            </a>
                         @else
                             <a target="" href="{{ route('sale.print', $sale->id) }}"
                                 class="btn btn-outline-primary float-end mt-4 "><i data-feather="printer"
-                                    class="me-2 icon-md"></i>Print Invoice</a>
+                                    class="me-2 icon-md"></i>Print Invoice
+                            </a>
                         @endif
+                    </div>
+                    <div class="mt-5">
+                        <h5 class="fw-normal text-success m-0 p-0"><b>Invoice by</b></h5>
+                        <p class=""> {{ $authName ?? '' }}</p>
                     </div>
 
                 </div>
@@ -249,11 +244,63 @@
                 <a href="{{ route('sale') }}" class="btn btn-outline-primary mt-4"><i data-feather="plus-circle"
                         class="me-2 icon-md"></i>Sale</a>
             </div>
+
+        </div>
+        <div class="footer_invoice text-center">
+            <p>© 2024 <a href="https://eclipseintellitech.com/" target="_blank">Eclipse Intellitech
+                    Limited.</a> All rights
+                reserved. Powered by Eclipse Intellitech <a href="https://electro-pos.eclipseintellitech.com/login"
+                    target="_blank">EIL
+                    Electro</a> Software</p>
         </div>
     </div>
+
+    <script>
+        function setPaperSize('$invoice_type') {
+            let styleElement = document.getElementById('print-style');
+
+            if (!styleElement) {
+                styleElement = document.createElement('style');
+                styleElement.id = 'print-style';
+                document.head.appendChild(styleElement);
+            }
+
+            let sizeCss;
+
+            switch (size) {
+                case 'a4':
+                    sizeCss = '@page { size: A4; }';
+                    break;
+                case 'a5':
+                    sizeCss = '@page { size: A5; }';
+                    break;
+                case 'letter':
+                    sizeCss = '@page { size: letter; }';
+                    break;
+                case 'custom':
+                    sizeCss = '@page { size: 210mm 297mm; }'; // Example for A4 size in custom dimensions
+                    break;
+                default:
+                    sizeCss = '@page { size: auto; }'; // Default
+            }
+
+            styleElement.innerHTML = `
+            @media print {
+                ${sizeCss}
+            }
+        `;
+        }
+    </script>
+
+
+
     <style>
         .table> :not(caption)>*>* {
             padding: 0px 10px !important;
+        }
+
+        .footer_invoice {
+            display: none !important;
         }
 
         .margin_left_m_14 {
@@ -309,6 +356,7 @@
                     size: A5;
                 }
             @endif
+
             nav,
             .footer {
                 display: none !important;
@@ -394,43 +442,21 @@
             .print_bg_white {
                 background-color: transparent !important;
             }
+
+            .footer_invoice {
+                display: block !important;
+                position: absolute !important;
+                bottom: 0 !important;
+                left: 50% !important;
+                transform: translateX(-50%);
+            }
+
+            .footer_invoice p {
+                font-size: 12px !important;
+                color: #000;
+            }
         }
     </style>
 
-    <script>
-        function setPaperSize('$invoice_type') {
-            let styleElement = document.getElementById('print-style');
 
-            if (!styleElement) {
-                styleElement = document.createElement('style');
-                styleElement.id = 'print-style';
-                document.head.appendChild(styleElement);
-            }
-
-            let sizeCss;
-
-            switch (size) {
-                case 'a4':
-                    sizeCss = '@page { size: A4; }';
-                    break;
-                case 'a5':
-                    sizeCss = '@page { size: A5; }';
-                    break;
-                case 'letter':
-                    sizeCss = '@page { size: letter; }';
-                    break;
-                case 'custom':
-                    sizeCss = '@page { size: 210mm 297mm; }'; // Example for A4 size in custom dimensions
-                    break;
-                default:
-                    sizeCss = '@page { size: auto; }'; // Default
-            }
-
-            styleElement.innerHTML = `
-                @media print {
-                    ${sizeCss}
-                }
-            `;
-        }
-    </script>
 @endsection

@@ -13,10 +13,8 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="card-title">Category Table</h6>
-                        @if (Auth::user()->can('category.add'))
                         <button class="btn btn-rounded-primary btn-sm" data-bs-toggle="modal"
                             data-bs-target="#exampleModalLongScollable"><i data-feather="plus"></i></button>
-                        @endif
                     </div>
                     <div class="table-responsive">
                         <table id="dataTableExample" class="table">
@@ -217,16 +215,16 @@
                                 data-id="${category.id}">${category.status != 0 ? 'Active' : 'Inactive'}</button>
                             </td>
                             <td>
-                                @can('category.edit')
+                                @if (Auth::user()->can('category.edit'))
                                 <a href="#" class="btn btn-primary btn-icon category_edit" data-id=${category.id} data-bs-toggle="modal" data-bs-target="#edit">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </a>
-                                @endcan
-                                @can('category.delete')
+                                @endif
+                                @if (Auth::user()->can('category.delete'))
                                 <a href="#" class="btn btn-danger btn-icon category_delete" data-id=${category.id}>
                                     <i class="fa-solid fa-trash-can"></i>
                                 </a>
-                             @endcan
+                                @endif
                             </td>
                             `;
                                 $('.showData').append(tr);
@@ -237,10 +235,8 @@
                                 <td colspan='8'>
                                     <div class="text-center text-warning mb-2">Data Not Found</div>
                                     <div class="text-center">
-                                    @can('category.add')
                                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModalLongScollable">Add
                                             Category<i data-feather="plus"></i></button>
-                                    @endcan
                                     </div>
                                 </td>
                             </tr>`)
@@ -363,6 +359,8 @@
                     }
                 });
             })
+
+
             // category Status
             $(document).ready(function() {
                 $('.showData').on('click', '.categoryButton', function() {

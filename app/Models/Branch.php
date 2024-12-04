@@ -9,8 +9,4 @@ class Branch extends Model
 {
     use HasFactory;
     protected $guarded = [];
-    public function stocks()
-    {
-        return $this->hasMany(Stock::class, 'branch_id');
-    }
 }

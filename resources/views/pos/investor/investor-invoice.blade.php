@@ -72,7 +72,7 @@
                                 {{ $investors->credit ?? '-'}}
                             </td>
                             <td>
-                                {{ $investors->wallet_balance ?? '-'}}
+                                {{ $investors->balance ?? '-'}}
                             </td>
                         </tr>
                     </tbody>

@@ -7,6 +7,7 @@
             <li class="breadcrumb-item active" aria-current="page">Bank Report</li>
         </ol>
     </nav>
+
     <div class="row">
         <div class="col-md-12   grid-margin stretch-card filter_box">
             <div class="card">
@@ -78,7 +79,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <div class="justify-content-left">

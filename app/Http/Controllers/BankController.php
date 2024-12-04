@@ -4,13 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\AccountTransaction;
 use App\Models\Bank;
-use App\Models\Transaction;
 use App\Repositories\RepositoryInterfaces\BankInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
-use can;
 
 class BankController extends Controller
 {
@@ -81,24 +79,20 @@ class BankController extends Controller
         } else {
             $banks = Bank::where('branch_id', Auth::user()->branch_id)->latest()->get();
         }
-        $totalBalance = 0;
+
         $banks->load('accountTransaction');
+
         // Add latest transaction to each bank
         foreach ($banks as $bank) {
             $bank->latest_transaction = $bank->accountTransaction()->latest()->first();
-            if ($bank->latest_transaction) {
-                $totalBalance += $bank->latest_transaction->balance;
-            }
         }
 
+        // dd($banks);
         return response()->json([
             "status" => 200,
-            "data" => $banks,
-            "totalBalance" => number_format($totalBalance, 2)
+            "data" => $banks
         ]);
     }
-
-
     public function edit($id)
     {
         $bank = $this->bankrepo->editBank($id);
@@ -119,6 +113,10 @@ class BankController extends Controller
         // dd($request->all());
         $validator = Validator::make($request->all(), [
             'name' => 'required|max:99',
+            'branch_name' => 'required|max:149',
+            'phone_number' => 'required|max:19',
+            'account' => 'required',
+            // 'opening_balance' => 'required',
         ]);
         if ($validator->passes()) {
             $bank = Bank::findOrFail($id);
@@ -128,7 +126,14 @@ class BankController extends Controller
             $bank->phone_number = $request->phone_number;
             $bank->account = $request->account;
             $bank->email = $request->email;
+            // $bank->opening_balance = $request->opening_balance;
             $bank->save();
+
+            // $accountTransaction = AccountTransaction::where('account_id', $id)->first();
+            // $oldBalance = AccountTransaction::latest()->first();
+            // $accountTransaction->balance = (($oldBalance->balance - $accountTransaction->credit) + $request->opening_balance);
+            // $accountTransaction->credit = $request->opening_balance;
+            // $accountTransaction->save();
 
             return response()->json([
                 'status' => 200,

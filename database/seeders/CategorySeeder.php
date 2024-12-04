@@ -13,24 +13,25 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        $categories = [
+        $productCategorys = [
             [
                 'id' => 1,
-                'name' => 'Mobile Phones',
-                'slug' => 'mobile-phones',
-                'status' =>1,
+                'name' => 'Clothing',
+                'slug' => 'clothing',
             ],
             [
                 'id' => 2,
-                'name' => 'Home Appliances',
-                'slug' => 'home-appliances',
-                'status' =>1,
+                'name' => 'Electronics',
+                'slug' => 'electronics',
             ],
-
+            [
+                'id' => 3,
+                'name' => 'Food',
+                'slug' => 'food',
+            ],
         ];
 
-
-        foreach ($categories as $productCategory) {
+        foreach ($productCategorys as $productCategory) {
             Category::create($productCategory);
         }
     }

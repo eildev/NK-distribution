@@ -200,23 +200,13 @@ class PromotionController extends Controller
 
         if ($type) {
             if ($type == 'wholesale') {
-                // $wholesale = Product::where('branch_id', Auth::user()->branch_id)->where('stock', ">", 0)->get();
-                $wholesale = Product::where('branch_id', Auth::user()->branch_id)
-                    ->withSum('stockQuantity', 'stock_quantity')
-                    ->having('stock_quantity_sum_stock_quantity', '>', 0)
-                    ->orderBy('stock_quantity_sum_stock_quantity', 'asc') // or 'desc'
-                    ->get();
-
+                $wholesale = Product::where('branch_id', Auth::user()->branch_id)->where('stock', ">", 0)->get();
                 return response()->json([
                     "status" => 200,
                     'wholesale' => $wholesale
                 ]);
             } else if ($type == 'products') {
-                $products = Product::where('branch_id', Auth::user()->branch_id)
-                    ->withSum('stockQuantity', 'stock_quantity')
-                    ->having('stock_quantity_sum_stock_quantity', '>', 0)
-                    ->orderBy('stock_quantity_sum_stock_quantity', 'asc') // or 'desc'
-                    ->get();
+                $products = Product::where('branch_id', Auth::user()->branch_id)->where('stock', ">", 0)->get();
                 return response()->json([
                     "status" => 200,
                     'products' => $products
@@ -249,11 +239,7 @@ class PromotionController extends Controller
 
     public function allProduct()
     {
-        $products = Product::where('branch_id', Auth::user()->branch_id)
-            ->withSum('stockQuantity', 'stock_quantity')
-            ->having('stock_quantity_sum_stock_quantity', '>', 0)
-            ->orderBy('stock_quantity_sum_stock_quantity', 'asc') // or 'desc'
-            ->get();
+        $products = Product::where('branch_id', Auth::user()->branch_id)->where('stock', ">", 0)->get();
         return response()->json([
             "status" => 200,
             'products' => $products

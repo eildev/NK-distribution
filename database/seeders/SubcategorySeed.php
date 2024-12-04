@@ -13,57 +13,28 @@ class SubcategorySeed extends Seeder
      */
     public function run(): void
     {
-        $subcategories = [
-            // Consumer Electronics
+        $productSubcategory = [
             [
                 'id' => 1,
                 'category_id' => 1,
-                'name' => 'Gaming Phones',
-                'slug' => 'gaming-phones',
+                'name' => 'T-shirt',
+                'slug' => 't-shirt',
             ],
             [
                 'id' => 2,
-                'category_id' => 1,
-                'name' => 'Feature Phones',
-                'slug' => 'feature-phones',
+                'category_id' => 2,
+                'name' => 'TV',
+                'slug' => 'tv',
             ],
             [
                 'id' => 3,
-                'category_id' => 1,
-                'name' => 'Foldable Phones',
-                'slug' => 'foldable-phones',
+                'category_id' => 3,
+                'name' => 'Vegetable',
+                'slug' => 'vegetable',
             ],
-            [
-                'id' => 4,
-                'category_id' => 1,
-                'name' => 'Smartphones',
-                'slug' => 'Smartphones',
-            ],
-            [
-                'id' => 5,
-                'category_id' => 1,
-                'name' => 'Bluetooth Speakers',
-                'slug' => 'bluetooth-speakers',
-            ],
-
-            // Home Appliances
-            [
-                'id' => 6,
-                'category_id' => 2,
-                'name' => 'Refrigerators',
-                'slug' => 'refrigerators',
-            ],
-            [
-                'id' => 7,
-                'category_id' => 2,
-                'name' => 'Washing Machines',
-                'slug' => 'washing-machines',
-            ],
-
         ];
 
-
-        foreach ($subcategories as $subcategory) {
+        foreach ($productSubcategory as $subcategory) {
             SubCategory::create($subcategory);
         }
     }

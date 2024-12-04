@@ -171,21 +171,16 @@
                                                 <label class="form-check-label text_custom" for="authCheck">
                                                     Remember me
                                                 </label>
-                                                <a href="#"
+                                                <a href="{{ route('password.request') }}"
                                                     class="float-end text_custom text-decoration-none">Forgot
                                                     Password?</a>
                                             </div>
                                             <div class=" justify-content-center align-items-center d-flex w-full">
-                                                {{-- <a class="btn btn-primary me-2 mb-2 mb-md-0 text-white custom_btn "
-                                                    id="admin-btn">Admin</a> --}}
-                                                <button
-                                                    class="btn btn-primary me-2  mb-2 mb-md-0 text-white custom_btn">Login</button>
-                                                {{-- <a class="btn btn-primary  mb-2 mb-md-0 text-white custom_btn"
-                                                    id="salesman-btn">Slaes Man</a> --}}
+
+                                                <button class="btn btn-primary me-2  mb-2 mb-md-0 text-white custom_btn"
+                                                    style="background-color: #2177F7">Login</button>
+
                                             </div>
-                                            {{-- <a href="{{ route('register') }}" class="d-block mt-3 text-muted">Not a
-                                                user? Sign
-                                                up</a> --}}
                                         </form>
                                     </div>
                                 </div>
@@ -198,8 +193,9 @@
         </div>
     </div>
     <!-- Custom JS for this page -->
-    <script>
-        const passwordInput = document.getElementById('userPassword');
+
+<script>
+      const passwordInput = document.getElementById('userPassword');
         const togglePassword = document.getElementById('togglePassword');
         const icon = togglePassword.querySelector('i'); // Select the icon element inside the div
 
@@ -216,16 +212,7 @@
             feather.replace();
             console.log(icon);
         });
-        document.getElementById('admin-btn').addEventListener('click', function() {
-            document.getElementById('userEmail').value = 'admin@gmail.com';
-            document.getElementById('userPassword').value = 123;
-        });
-        document.getElementById('salesman-btn').addEventListener('click', function() {
-            document.getElementById('userEmail').value = 'salesman@gmail.com';
-            document.getElementById('userPassword').value = 12345678
-        });
-    </script>
-
+</script>
     <!-- core:js -->
     <script src="../../../assets/vendors/core/core.js"></script>
     <!-- endinject -->

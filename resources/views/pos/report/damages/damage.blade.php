@@ -49,11 +49,7 @@
                                 </div>
                             </div>
                             @php
-                                if(Auth::user()->id == 1){
-                                    $products = App\Models\Product::all();
-                                }else{
-                                    $products = App\Models\Product::where('branch_id', Auth::user()->branch_id)->get();
-                                }
+                                $products = App\Models\Product::all();
                             @endphp
                             <div class="col-md-3">
                                 <div class=" input-group flatpickr" id="flatpickr-date">
@@ -72,11 +68,7 @@
                                 </div>
                             </div>
                             @php
-                            if(Auth::user()->id == 1){
-                            $all_branch = App\Models\Branch::all();
-                            }else{
-                                $all_branch = App\Models\Branch::where('id', Auth::user()->branch_id)->get();
-                            }
+                                $all_branch = App\Models\Branch::all();
                             @endphp
                             <div class="col-md-3">
                                 <div class=" input-group flatpickr" id="flatpickr-date">
