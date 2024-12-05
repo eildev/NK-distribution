@@ -33,7 +33,10 @@
                                     @foreach ($customers as $key => $customer)
                                         <tr>
                                             <td>{{ $key + 1 }}</td>
-                                            <td>{{ $customer->name ?? '' }}</td>
+                                            <td>
+                                                 <a href="{{ route('customer.profile', $customer->id) }}">
+                                                {{ $customer->name ?? '' }}
+                                            </a></td>
                                             <td>{{ $customer->phone ?? '' }}</td>
                                             <td>{{ $customer['branch']['name'] ?? '' }}</td>
                                             <td>
