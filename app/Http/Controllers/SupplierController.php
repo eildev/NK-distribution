@@ -2,12 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Bank;
-use App\Models\Branch;
 use App\Models\Supplier;
-use App\Models\Transaction;
 use App\Models\User;
-use Carbon\Carbon;
 // use Validator;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
@@ -42,21 +38,6 @@ class SupplierController extends Controller
             $supplier->opening_payable = $opening_receivable;
             $supplier->total_payable = 0;
             $supplier->save();
-
-            if ($request->opening_receivable > 0) {
-                $transaction = new Transaction;
-                $transaction->branch_id = Auth::user()->branch_id;
-                $transaction->processed_by =  Auth::user()->id;
-                $transaction->date = Carbon::now();
-                $transaction->particulars = 'Opening Due';
-                $transaction->payment_type = 'pay';
-                $transaction->supplier_id = $supplier->id;
-                $transaction->credit = 0;
-                $transaction->debit = $request->opening_receivable ?? 0;
-                $transaction->balance = $request->opening_receivable ?? 0;
-                $transaction->save();
-            }
-
             return response()->json([
                 'status' => 200,
                 'message' => 'Supplier Save Successfully',
@@ -70,7 +51,9 @@ class SupplierController extends Controller
     }
     public function view()
     {
-        $suppliers = Supplier::get();
+
+        $suppliers = Supplier::all();
+
         return response()->json([
             "status" => 200,
             "data" => $suppliers
@@ -125,16 +108,5 @@ class SupplierController extends Controller
             'status' => 200,
             'message' => 'Supplier Deleted Successfully',
         ]);
-    }
-
-    public function SupplierProfile($id)
-    {
-        $data = Supplier::findOrFail($id);
-        $transactions = Transaction::where('supplier_id', $data->id)->get();
-        $branch = Branch::findOrFail($data->branch_id);
-        $banks = Bank::latest()->get();
-        $isCustomer = false;
-
-        return view('pos.profiling.profiling', compact('data', 'transactions', 'branch', 'isCustomer', 'banks'));
     }
 }

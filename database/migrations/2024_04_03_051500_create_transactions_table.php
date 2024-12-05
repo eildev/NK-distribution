@@ -16,7 +16,6 @@ return new class extends Migration
             $table->unsignedBigInteger('branch_id')->unsigned();
             $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
             $table->date('date')->nullable();
-            $table->integer('processed_by')->nullable();
             $table->enum('payment_type', ['receive', 'pay'])->comment('Recieve or Pay');
             $table->string('particulars')->nullable()->comment('Purchase #12 or Paid to Supplyer/Sale #10 Received from Customer');
             $table->integer('customer_id')->nullable();
@@ -25,7 +24,7 @@ return new class extends Migration
             $table->decimal('debit', 12, 2)->nullable();
             $table->decimal('credit', 12, 2)->nullable();
             $table->decimal('balance', 14, 2);
-            $table->integer('payment_method')->nullable();
+            $table->integer('payment_method');
             $table->string('note')->nullable();
             $table->timestamps();
         });

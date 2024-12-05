@@ -1,6 +1,66 @@
 @extends('master')
 @section('title', '| Sale')
 @section('admin')
+    <style>
+        #product_search {
+            border: 1px solid #0d6efd;
+            border-radius: 5px;
+            padding: 10px;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        #product_search:focus {
+            border-color: #0056b3;
+            outline: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .product_search_result {
+            position: absolute;
+            background-color: #060C17;
+            width: 45%;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #0056b3;
+            border-top: 10;
+            margin-top: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .product_search_result table {
+            width: 100%;
+            /* margin: 0; */
+            border-collapse: collapse;
+        }
+
+        .product_search_result table tbody tr {
+            border-bottom: 1px solid #0056b3;
+            padding: 10px;
+
+        }
+
+        .product_search_result table tbody tr:hover {
+            background-color: #0056b3;
+            cursor: pointer;
+
+        }
+
+        .product_search_result table tbody tr td {
+            padding: 8px 12px;
+        }
+
+        .product_search_result {
+            display: none;
+        }
+
+        .product_search_result.active {
+            display: block;
+        }
+    </style>
     <div class="row mt-0">
         <div class="col-lg-12 grid-margin stretch-card mb-3">
             <div class="card">
@@ -9,7 +69,6 @@
                         @if ($barcode == 1)
                             <div class="mb-2 col-md-6">
                                 <label for="ageSelect" class="form-label">Barcode</label>
-
                                 <div class="input-group">
                                     <div class="input-group-text" id="btnGroupAddon"><i class="fa-solid fa-barcode"></i>
                                     </div>
@@ -19,10 +78,7 @@
                             </div>
                         @endif
 
-                        <div
-                            class="mb-2 @if ($barcode == 1) col-md-6
-                        @else
-                        col-md-2 @endif">
+                        <div class="mb-2 col-md-6">
                             <label for="date" class="form-label">Date</label>
                             <div class="input-group flatpickr me-2 mb-2 mb-md-0" id="dashboardDate">
                                 <span class="input-group-text input-group-addon bg-transparent border-primary"
@@ -33,44 +89,41 @@
                             </div>
                             <span class="text-danger purchase_date_error"></span>
                         </div>
-                        <div
-                            class="mb-1 @if ($barcode == 1) col-md-6
-                        @else
-                        col-md-5 @endif">
+                        <div class="mb-1 col-md-6">
                             <label class="form-label">Product</label>
-                            <div class="row mx-1">
-                                <div class="@if ($via_sale == 1) col-md-9 @else col-md-12 @endif p-0">
-                                    <select class="js-example-basic-single form-select product_select view_product"
-                                        data-width="100%" onchange="errorRemove(this);">
+                            <div class="d-flex g-3">
+                                {{-- // --}}
+                                {{-- <input type="text" style="border: 1px solid #0d6efd" class="form-control py-2 product_select view_product" id="product_search"
+                                placeholder="Search here..." autocomplete="off" data-width="100%" onchange="errorRemove(this);">
 
-                                    </select>
-                                    <span class="text-danger product_select_error"></span>
-                                </div>
+                                <div class="product_search_result">
+                                    <table class="table">
+                                        <tbody class="findData">
+                                        </tbody>
+                                    </table>
+                                </div> --}}
+                                {{-- // --}}
+                                <select class="js-example-basic-single form-select product_select view_product"
+                                    data-width="100%" onchange="errorRemove(this);">
+                                </select>
+
+                                <span class="text-danger product_select_error"></span>
                                 @if ($via_sale == 1)
-                                    <div class="@if ($via_sale == 1) col-md-3 @endif p-0">
-                                        <button class="btn btn-primary mx-2 via_sell_btn w-100 h-100" data-bs-toggle="modal"
-                                            data-bs-target="#viaSellModal">Via Sell</button>
-                                    </div>
+                                    <button class="btn btn-primary ms-2 w-25" data-bs-toggle="modal"
+                                        data-bs-target="#viaSellModal">Via Sell</button>
                                 @endif
                             </div>
                         </div>
-                        <div
-                            class="mb-1 @if ($barcode == 1) col-md-6
-                        @else
-                        col-md-5 @endif">
+                        <div class="mb-1 col-md-6">
                             <label for="password" class="form-label">Customer</label>
-                            <div class="row mx-1">
-                                <div class="col-md-9 p-0">
-                                    <select class="js-example-basic-single form-select select-customer" data-width="100%"
-                                        onchange="errorRemove(this);">
+                            <div class="d-flex g-3">
+                                <select class="js-example-basic-single form-select select-customer" data-width="100%"
+                                    onchange="errorRemove(this);">
 
-                                    </select>
-                                    <span class="text-danger select-customer_error"></span>
-                                </div>
-                                <div class="col-md-3 p-0">
-                                    <button class="btn btn-sm btn-primary ms-2 via_sell_btn w-100 h-100"
-                                        data-bs-toggle="modal" data-bs-target="#customerModal">Add</button>
-                                </div>
+                                </select>
+                                <span class="text-danger select-customer_error"></span>
+                                <button class="btn btn-primary ms-2" data-bs-toggle="modal"
+                                    data-bs-target="#customerModal">Add</button>
                             </div>
                         </div>
                         <div>
@@ -180,7 +233,7 @@
                                             </option>
                                         @endforeach
                                     @else
-                                        <option selected disabled>Please Add Transaction</option>
+                                        <option selected disabled>Please Add Tax</option>
                                     @endif
                                 </select>
                             </div>
@@ -221,7 +274,9 @@
                         </div>
                         <div class="col-sm-8">
                             @php
-                                $payments = App\Models\Bank::get();
+                                $payments = App\Models\Bank::where('branch_id', Auth::user()->branch_id)
+                                    ->latest()
+                                    ->get();
                             @endphp
                             <select class="form-select payment_method" data-width="100%" onclick="errorRemove(this);"
                                 onblur="errorRemove(this);">
@@ -367,7 +422,11 @@
                             <label for="name" class="form-label">Payement Method <span
                                     class="text-danger">*</span></label>
                             @php
-                                $payments = App\Models\Bank::all();
+
+                                $payments = App\Models\Bank::where('branch_id', Auth::user()->branch_id)
+                                    ->latest()
+                                    ->get();
+
                             @endphp
                             <select class="form-select transaction_account" data-width="100%" name="transaction_account"
                                 onclick="errorRemove(this);" onblur="errorRemove(this);">
@@ -399,12 +458,6 @@
         </div>
     </div>
 
-    <style>
-        .via_sell_btn {
-            font-size: 12px !important;
-        }
-    </style>
-
     <script>
         // error remove
         function errorRemove(element) {
@@ -430,8 +483,7 @@
         });
 
 
-
-        //  jquery redy function
+        // jquery redy function
         $(document).ready(function() {
             // Barcode Focused
             $('.barcode_input').focus();
@@ -467,7 +519,7 @@
                             );
                             $.each(products, function(index, product) {
                                 $('.view_product').append(
-                                    `<option value="${product.id}">${product.name} (${product.stock} pc Available)</option>`
+                                    `<option value="${product.id}">${product.name} (${product.stock_quantity_sum  || 0} pc Available)</option>`
                                 );
                             })
                         } else {
@@ -475,10 +527,10 @@
                         <option selected disable>Please add Product</option>`)
                         }
                     }
+
                 })
             }
             viewViaSell();
-
 
             // add via Products
             $(document).on('click', '.save_via_product', function(e) {
@@ -576,9 +628,6 @@
                         $('.select-customer').empty();
                         // Append the disabled "Select Product" option
                         if (customers.length > 0) {
-                            $('.select-customer').append(
-                                `<option selected disabled>Select Customer</option>`
-                            );
                             $.each(customers, function(index, customer) {
                                 $('.select-customer').append(
                                     `<option value="${customer.id}">${customer.name}(${customer.phone})</option>`
@@ -689,7 +738,7 @@
                                         <option value="5 Year">5 Year</option>
                                         <option selected disabled>No Warranty</option>
                                     </select>
-                                    <span class="text-danger"></span>
+                                    <span class="text-danger product_select_error"></span>
                                 </div>
                             </td>
                             <td style="padding-top: 20px;">
@@ -701,7 +750,7 @@
                                                 `<span class="discount_amount${product.id} mt-2">${promotion.discount_value}</span>Tk`
                                         : `<span class="mt-2">00</span>`
                                     : `<input type="number" product-id="${product.id}" class="form-control product_discount${product.id} discountProduct" name="product_discount"  value="" />
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 <input type="hidden" product-id="${product.id}" class="form-control produt_cost${product.id} productCost" name="produt_cost"  value="${product.cost}" />`
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             <input type="hidden" product-id="${product.id}" class="form-control produt_cost${product.id} productCost" name="produt_cost"  value="${product.cost}" />`
                                 }
                             </td>
                             <td>
@@ -724,8 +773,7 @@
                     );
                 }
             }
-
-            // Function to calculate the subtotal for each product
+            // Function to calculate the subtotal for each product -
             function calculateTotal() {
                 $('.quantity').each(function() {
                     let $quantityInput = $(this);
@@ -760,10 +808,8 @@
                 });
             }
 
-
-
             // when product price is Edit
-            $(document).on('change', '.unit_price', function() {
+            $(document).on('keyup', '.unit_price', function() {
                 let product_id = $(this).attr('product-id');
                 // alert(product_id);
                 let quantity = parseFloat($('.productQuantity' + product_id).val());
@@ -850,10 +896,6 @@
                 }
             });
 
-
-
-
-
             // Function to calculate the grand total from all products
             function calculateProductTotal() {
                 let allProductTotal = document.querySelectorAll('#productTotal');
@@ -899,30 +941,24 @@
                     }
                 });
             });
-
             // Select product
             $('.product_select').change(function() {
                 let id = $(this).val();
-                let customer_id = $('.select-customer').val();
-                if (customer_id != null) {
-                    if ($(`.data_row${id}`).length === 0 && id) {
-                        $.ajax({
-                            url: '/product/find/' + id,
-                            type: 'GET',
-                            dataType: 'JSON',
-                            success: function(res) {
-                                const product = res.data;
-                                const promotion = res.promotion;
-                                showAddProduct(product, 1, promotion);
-                                updateGrandTotal();
-                                calculateCustomerDue();
-                            }
-                        });
-                    }
-                } else {
-                    toastr.warning('Please select a Customer');
+                // console.log(id);
+                if ($(`.data_row${id}`).length === 0 && id) {
+                    $.ajax({
+                        url: '/product/find/' + id,
+                        type: 'GET',
+                        dataType: 'JSON',
+                        success: function(res) {
+                            const product = res.data;
+                            const promotion = res.promotion;
+                            showAddProduct(product, 1, promotion);
+                            updateGrandTotal();
+                            calculateCustomerDue();
+                        }
+                    });
                 }
-
             });
 
             // Purchase delete
@@ -962,7 +998,6 @@
                         }
                     }
                 })
-
             }
             calculateCustomerDue();
 
@@ -1217,5 +1252,84 @@
                 saveInvoice();
             })
         })
+
+
+
+        //Search
+
+        // const global_search1 = document.querySelector("#product_search");
+        // const search_result1 = document.querySelector(".product_search_result");
+        // // console.log(global_search);
+        // global_search1.addEventListener('keyup', function() {
+        //     // console.log(global_search.value);
+        //     if (global_search1.value != '') {
+        //         $.ajax({
+        //             url: '/search/' + global_search1.value,
+        //             type: 'GET',
+        //             success: function(res) {
+        //                 // console.log(res);
+        //                 let findData = '';
+        //                 search_result1.style.display = 'block';
+        //                 if (res.products.length > 0) {
+        //                     $.each(res.products, function(key, value) {
+        //                         findData += `<tr>
+    //                                 <td>${value.name ?? ""}</td>
+    //                                 <td>${value.stock_quantity_sum_stock_quantity ?? 0}</td>
+    //                                 <td>${value.price ?? 0}</td>
+    //                             </tr>`
+        //                     });
+
+        //                     $('.findData').html(findData);
+        //                 } else {
+        //                     $('.table_header').hide();
+        //                     findData += `<tr>
+    //                                 <td colspan = "3" class = "text-center">Data not Found</td>
+    //                             </tr>`
+        //                     $('.findData').html(findData);
+        //                 }
+        //             }
+        //         });
+        //     } else {
+        //         search_result1.style.display = 'none';
+        //     }
+        // })
+
+        // global_search1.addEventListener('click', function() {
+        //     // console.log(global_search.value);
+        //     if (global_search1.value != '') {
+        //         $.ajax({
+        //             url: '/search/' + global_search1.value,
+        //             type: 'GET',
+        //             success: function(res) {
+        //                 // console.log(res);
+        //                 let findData = '';
+        //                 search_result1.style.display = 'block';
+        //                 if (res.products.length > 0) {
+        //                     $.each(res.products, function(key, value) {
+        //                         findData += `<tr>
+    //                                         <td>${value.name}</td>
+    //                                         <td>${value.stock}</td>
+    //                                         <td>${value.price}</td>
+    //                                     </tr>`
+        //                     });
+
+        //                     $('.findData').html(findData);
+        //                 } else {
+        //                     $('.table_header').hide();
+        //                     findData += `<tr>
+    //                                     <td colspan = "3" class = "text-center">Data not Found</td>
+    //                                 </tr>`
+        //                     $('.findData').html(findData);
+        //                 }
+        //             }
+        //         });
+        //     } else {
+        //         search_result1.style.display = 'none';
+        //     }
+        // })
+
+        // global_search1.addEventListener('blur', function() {
+        //     search_result1.style.display = 'none';
+        // });
     </script>
 @endsection

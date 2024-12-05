@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Seeders;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -139,9 +140,57 @@ class PermissionSeeder extends Seeder
             ['id' => 98, 'name' => 'branch.edit', 'guard_name' => 'web', 'group_name' => 'branch'],
             ['id' => 99, 'name' => 'branch.delete', 'guard_name' => 'web', 'group_name' => 'branch'],
 
-            ['id' => 100, 'name' => 'report.menu', 'guard_name' => 'web', 'group_name' => '	report'],
-            ['id' => 101, 'name' => 'return.menu', 'guard_name' => 'web', 'group_name' => '	return'],
+            ['id' => 100, 'name' => 'report.menu', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 101, 'name' => 'return.menu', 'guard_name' => 'web', 'group_name' => 'return'],
+            ['id' => 102, 'name' => 'limit.user', 'guard_name' => 'web', 'group_name' => 'limit'],
+            ['id' => 103, 'name' => 'limit.device', 'guard_name' => 'web', 'group_name' => 'limit'],
 
+            ['id' => 104, 'name' => 'via.purchase', 'guard_name' => 'web', 'group_name' => 'purchase'],
+
+            ['id' => 105, 'name' => 'Inventory.menu', 'guard_name' => 'web', 'group_name' => 'inventory'],
+            ['id' => 106, 'name' => 'Inventory.stock.report', 'guard_name' => 'web', 'group_name' => 'inventory'],
+            ['id' => 107, 'name' => 'Inventory.low.stock.report', 'guard_name' => 'web', 'group_name' => 'inventory'],
+            ['id' => 108, 'name' => 'Inventory.damage', 'guard_name' => 'web', 'group_name' => 'inventory'],
+
+            ['id' => 109, 'name' => 'setting.manage', 'guard_name' => 'web', 'group_name' => 'settings'],
+            ['id' => 110, 'name' => 'excel.file.import', 'guard_name' => 'web', 'group_name' => 'other'],
+            ['id' => 111, 'name' => 'bank.add', 'guard_name' => 'web', 'group_name' => 'bank'],
+            ['id' => 112, 'name' => 'category.add', 'guard_name' => 'web', 'group_name' => 'category'],
+            ['id' => 113, 'name' => 'subcategory.add', 'guard_name' => 'web', 'group_name' => 'subcategory'],
+            ['id' => 114, 'name' => 'brand.add', 'guard_name' => 'web', 'group_name' => 'brand'],
+            ['id' => 115, 'name' => 'unit.add', 'guard_name' => 'web', 'group_name' => 'unit'],
+            ['id' => 116, 'name' => 'tax.add', 'guard_name' => 'web', 'group_name' => 'taxes'],
+            ['id' => 117, 'name' => 'supplier.add', 'guard_name' => 'web', 'group_name' => 'supplier'],
+            ['id' => 118, 'name' => 'damage.list', 'guard_name' => 'web', 'group_name' => 'damage'],
+            ['id' => 119, 'name' => 'via.purchase.payment', 'guard_name' => 'web', 'group_name' => 'purchase'],
+            ['id' => 120, 'name' => 'via.purchase.delete', 'guard_name' => 'web', 'group_name' => 'purchase'],
+            ['id' => 121, 'name' => 'toady.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 122, 'name' => 'product.info.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 123, 'name' => 'summary.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 124, 'name' => 'customer.due.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 125, 'name' => 'supplier.due.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 126, 'name' => 'top.products.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 127, 'name' => 'purchase.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 128, 'name' => 'customer.ledger.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 129, 'name' => 'supplier.ledger.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 130, 'name' => 'account.transaction.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 131, 'name' => 'expense.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 132, 'name' => 'employee.salary.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 133, 'name' => 'sms.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 134, 'name' => 'monthly.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 135, 'name' => 'yearly.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 136, 'name' => 'inventory.report', 'guard_name' => 'web', 'group_name' => 'report'],
+            ['id' => 137, 'name' => 'Make.Items', 'guard_name' => 'web', 'group_name' => 'make-menu-and-item'],
+            ['id' => 138, 'name' => 'make.items.manage', 'guard_name' => 'web', 'group_name' => 'make-menu-and-item'],
+            ['id' => 139, 'name' => 'make.category', 'guard_name' => 'web', 'group_name' => 'make-menu-and-item'],
+            ['id' => 140, 'name' => 'set.menu', 'guard_name' => 'web', 'group_name' => 'make-menu-and-item'],
+            ['id' => 141, 'name' => 'set.items', 'guard_name' => 'web', 'group_name' => 'make-menu-and-item'],
+            ['id' => 142, 'name' => 'set.items.manage', 'guard_name' => 'web', 'group_name' => 'make-menu-and-item'],
+            ['id' => 143, 'name' => 'top.sale.set.menu', 'guard_name' => 'web', 'group_name' => 'inventory'],
+            ['id' => 144, 'name' => 'top.sale.make.item', 'guard_name' => 'web', 'group_name' => 'inventory'],
+            ['id' => 145, 'name' => 'make.menu.and.item.menu', 'guard_name' => 'web', 'group_name' => 'make-menu-and-item'],
+            ['id' => 146, 'name' => 'ingredient.audit', 'guard_name' => 'web', 'group_name' => 'ingredient-audit'],
+            ['id' => 147, 'name' => 'audit.report', 'guard_name' => 'web', 'group_name' => 'ingredient-audit'],
             // add more permissions as needed
         ];
 

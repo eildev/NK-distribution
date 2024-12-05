@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Bank;
 use Illuminate\Http\Request;
 use App\Models\Customer;
 use App\Models\Branch;
-use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Repositories\RepositoryInterfaces\CustomerInterfaces;
@@ -36,22 +34,6 @@ class CustomerController extends Controller
         $customer->total_receivable = $request->wallet_balance ?? 0;
         $customer->created_at = Carbon::now();
         $customer->save();
-
-        if ($request->wallet_balance > 0) {
-            $transaction = new Transaction;
-            $transaction->branch_id = Auth::user()->branch_id;
-            $transaction->date = Carbon::now();
-            $transaction->processed_by =  Auth::user()->id;
-            $transaction->particulars = 'Opening Due';
-            $transaction->payment_type = 'receive';
-            $transaction->customer_id = $customer->id;
-            $transaction->credit = 0;
-            $transaction->debit = $request->wallet_balance;
-            $transaction->balance = $request->wallet_balance ?? 0;
-            $transaction->save();
-        }
-
-
         $notification = array(
             'message' => 'Customer Created Successfully',
             'alert-type' => 'info'
@@ -61,7 +43,11 @@ class CustomerController extends Controller
     } //End Method
     public function CustomerView()
     {
-        $customers = $this->customer_repo->ViewAllCustomer();
+        if(Auth::user()->id == 1){
+            $customers = Customer::all();
+        }else{
+            $customers = Customer::where('branch_id', Auth::user()->branch_id)->latest()->get();
+        }
         return view('pos.customer.view_customer', compact('customers'));
     } //
     public function CustomerEdit($id)
@@ -79,7 +65,7 @@ class CustomerController extends Controller
         $customer->address = $request->address;
         // $customer->opening_receivable = $request->opening_receivable ?? 0;
         // $customer->opening_payable = $request->opening_payable ?? 0;
-        // $customer->wallet_balance = $request->wallet_balance ?? 0;
+        $customer->wallet_balance = $request->wallet_balance ?? 0;
         // $customer->total_receivable = $request->total_receivable ?? 0;
         // $customer->total_payable = $request->total_payable ?? 0;
         $customer->updated_at = Carbon::now();
@@ -98,15 +84,5 @@ class CustomerController extends Controller
             'alert-type' => 'info'
         );
         return redirect()->back()->with($notification);
-    }
-    public function CustomerProfile($id)
-    {
-        $data = Customer::findOrFail($id);
-        $transactions = Transaction::where('customer_id', $data->id)->get();
-        $branch = Branch::findOrFail($data->branch_id);
-        $banks = Bank::latest()->get();
-        $isCustomer = true;
-
-        return view('pos.profiling.profiling', compact('data', 'transactions', 'branch', 'isCustomer', 'banks'));
     }
 }

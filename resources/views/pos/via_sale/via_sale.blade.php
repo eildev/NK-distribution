@@ -4,7 +4,7 @@
     <nav class="page-breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Via Sale</li>
+            <li class="breadcrumb-item active" aria-current="page">Via Purchase</li>
         </ol>
     </nav>
     <div class="row">
@@ -12,7 +12,7 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="card-title">Via Sale Table</h6>
+                        <h6 class="card-title">Via Purchase Table</h6>
                     </div>
                     <div class="table-responsive">
                         <table id="example" class="table">
@@ -43,8 +43,8 @@
                                             <td>{{ $via->paid ?? 0 }}</td>
                                             <td>{{ $via->due ?? 0 }}</td>
                                             <td>
-                                                <span class="{{ $via->due <= 0 ? 'text-success' : 'text-danger' }}">
-                                                    {{ $via->due <= 0 ? 'Paid' : 'Unpaid' }}
+                                                <span class="{{ $via->status == 1 ? 'text-success' : 'text-danger' }}">
+                                                    {{ $via->status == 1 ? 'Paid' : 'Unpaid' }}
                                                 </span>
                                             </td>
                                             <td>
@@ -58,15 +58,19 @@
                                                         <a class="dropdown-item"
                                                             href="{{ route('via.sale.invoice', $via->id) }}"><i
                                                                 class="fa-solid fa-file-invoice me-2"></i> Invoice</a>
-                                                        @if ($via->due > 0)
+                                                        @if ($via->status == 0)
+                                                        @if(Auth::user()->can('via.purchase.payment'))
                                                             <a class="dropdown-item add_payment" href="#"
                                                                 data-id="{{ $via->id }}" data-bs-toggle="modal"
                                                                 data-bs-target="#paymentModal"><i
                                                                     class="fa-solid fa-credit-card me-2"></i> Payment</a>
                                                         @endif
+                                                        @endif
+                                                        @if(Auth::user()->can('via.purchase.delete'))
                                                         <a class="dropdown-item delete_via_sale"
                                                             data-id="{{ $via->id }}" href="#"><i
                                                                 class="fa-solid fa-trash-can me-2"></i>Delete</a>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             </td>
@@ -113,7 +117,7 @@
                                 <label for="name" class="form-label">Transaction Account<span
                                         class="text-danger">*</span></label>
                                 @php
-                                    $payments = App\Models\Bank::all();
+                                    $payments = App\Models\Bank::where('branch_id', Auth::user()->branch_id)->get();
                                 @endphp
                                 <select class="form-select transaction_account" data-width="100%"
                                     name="transaction_account" onclick="errorRemove(this);" onblur="errorRemove(this);">

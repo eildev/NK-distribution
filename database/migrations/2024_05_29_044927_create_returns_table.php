@@ -24,6 +24,7 @@ return new class extends Migration
             $table->decimal('total_return_profit')->nullable();
             $table->tinyInteger('status')->default(0);
             $table->integer('processed_by');
+
             $table->timestamps();
         });
     }

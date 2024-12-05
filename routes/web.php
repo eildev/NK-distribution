@@ -29,6 +29,7 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\CompanyBalanceController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserLimitController;
 use App\Http\Controllers\ViaSaleController;
 use Illuminate\Support\Facades\Route;
 
@@ -40,14 +41,19 @@ use Illuminate\Support\Facades\Route;
 | Here is where you can register web routes for your application. These
 | routes are loaded by the RouteServiceProvider and all of them will
 | be assigned to the "web" middleware group. Make something great!
-|
+
 */
 
+Route::get('/test', function () {
+    return view('test');
+});
 
 Route::get('/', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-
+    // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     //Profile Route
     Route::controller(ProfileController::class)->group(function () {
         Route::get('/profile', 'edit')->name('profile.edit');
@@ -114,8 +120,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/customer/edit/{id}', 'CustomerEdit')->name('customer.edit');
         Route::post('/customer/update/{id}', 'CustomerUpdate')->name('customer.update');
         Route::get('/customer/delete/{id}', 'CustomerDelete')->name('customer.delete');
-        // customer profiling 
-        Route::get('/customer/profile/{id}', 'CustomerProfile')->name('customer.profile');
     });
 
     // Unit related route
@@ -137,21 +141,27 @@ Route::middleware('auth')->group(function () {
         Route::post('/product/size/update/{id}', 'ProductSizeUpdate')->name('product.size.update');
         Route::get('/product/size/delete/{id}', 'ProductSizeDelete')->name('product.size.delete');
     });
-
     // Product  related route(n)
     Route::controller(ProductsController::class)->group(function () {
         Route::get('/product', 'index')->name('product');
         Route::post('/product/store', 'store')->name('product.store');
-        Route::get('/product/view', 'view')->name('product.view');
-         Route::get('/via-product/view', 'viaProductsView')->name('product.via');
+        Route::get('/product/all/view', 'view')->name('product.all.view');
+        Route::get('/product/view', 'getData')->name('product.view');
         Route::get('/product/edit/{id}', 'edit')->name('product.edit');
         Route::post('/product/update/{id}', 'update')->name('product.update');
         Route::get('/product/destroy/{id}', 'destroy')->name('product.destroy');
         Route::get('/product/find/{id}', 'find')->name('product.find');
         Route::get('/product/barcode/{id}', 'ProductBarcode')->name('product.barcode');
         Route::get('/search/{value}', 'globalSearch');
-        // product ledger 
-        Route::get('/product/ledger/{id}', 'productLedger')->name('product.ledger');
+        //Excel import Route
+        Route::get('/products/imports', 'importProduct')->name('products.imports');
+        Route::post('/products/imports/all', 'ImportExcelData');
+        //Category import
+        Route::post('/category/imports/all', 'importCategoryExcelData');
+        //Subcategory import
+        Route::post('/subcategory/imports/all', 'importSubcategoryExcelData');
+        //Brand import
+        Route::post('/brand/imports/all', 'importBrandExcelData');
     });
     // Product  related route(n)
     Route::controller(EmployeeController::class)->group(function () {
@@ -182,8 +192,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/supplier/edit/{id}', 'edit')->name('supplier.edit');
         Route::post('/supplier/update/{id}', 'update')->name('supplier.update');
         Route::get('/supplier/destroy/{id}', 'destroy')->name('supplier.destroy');
-        // Supplier Profiling 
-        Route::get('/supplier/profile/{id}', 'SupplierProfile')->name('supplier.profile');
     });
     // Expense related route(n)
     Route::controller(ExpenseController::class)->group(function () {
@@ -226,7 +234,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/damage/show_quantity/{id}', 'ShowQuantity')->name('damage.show.quantity');
         Route::get('/damage/edit/{id}', 'edit')->name('damage.edit');
         Route::post('/damage/update/{id}', 'update')->name('damage.update');
-        Route::get('/damage/destroy/{id}', 'destroy')->name('damage.destroy');
+        Route::get('/damage/destroy/{damage_id}/{product_id}', 'destroy')->name('damage.destroy');
         // Route::get('/damage/invoice/{id}', 'invoice')->name('damage.invoice');
     });
     // Promotion  related route(n)
@@ -238,9 +246,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/promotion/update/{id}', 'PromotionUpdate')->name('promotion.update');
         Route::get('/promotion/delete/{id}', 'PromotionDelete')->name('promotion.delete');
         Route::get('/promotion/find/{id}', 'find')->name('promotion.find');
-    });
-    // Promotion Details related route(n)
-    Route::controller(PromotionController::class)->group(function () {
+
+        // Promotion Details related route(n)
+
         Route::get('/promotion/details/add', 'PromotionDetailsAdd')->name('promotion.details.add');
         Route::post('/promotion/details/store', 'PromotionDetailsStore')->name('promotion.details.store');
         Route::get('/promotion/details/view', 'PromotionDetailsView')->name('promotion.details.view');
@@ -287,9 +295,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/add/investor', 'InvestmentStore');
         Route::get('/get/investor', 'GetInvestor');
         Route::get('/get/invoice/{id}', 'InvestorInvoice')->name('investor.invoice');
-
-        //
-        Route::post('/due/invoice/payment/transaction', 'invoicePaymentStore');
     });
     // pos setting related route
     Route::controller(PosSettingsController::class)->group(function () {
@@ -307,7 +312,7 @@ Route::middleware('auth')->group(function () {
     });
     // sale related routes
     Route::controller(SaleController::class)->group(function () {
-        Route::get('/sale', 'index')->name('sale');
+        Route::get('/sale', 'index')->name('sale')->middleware('can:pos.menu');
         Route::post('/sale/store', 'store')->name('sale.store');
         Route::get('/sale/view', 'view')->name('sale.view');
         Route::get('/sale/view-all', 'viewAll')->name('sale.view.all');
@@ -386,8 +391,6 @@ Route::middleware('auth')->group(function () {
             Route::post('/damage/print', 'damageReportPrint')->name('damage.report.print');
             Route::get('/damage/product/filter', 'DamageProductFilter')->name('damage.product.filter.view');
 
-
-
             Route::get('/purchese/product/filter', 'PurchaseProductFilter')->name('purches.product.filter.view');
             Route::get('/purchese/details/invoice/{id}', 'PurchaseDetailsInvoice')->name('purchse.details.invoice');
             //////////////Account Transaction Route /////////////
@@ -412,6 +415,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/yearly/report', 'yearlyReport')->name('report.yearly');
             Route::get('/daily/balance', 'dailyBalance')->name('daily.balance');
         });
+        Route::get('/branch/{branch}/stock', 'stockShowByBranch')->name('branch.stock');
+        Route::get('/branch/{branch}/low-stock', 'lowStockShowByBranch')->name('branch.low.stock');
     });
     // Report related routes
     Route::controller(CompanyBalanceController::class)->group(function () {
@@ -487,7 +492,7 @@ Route::middleware('auth')->group(function () {
         ///Admin Manage Route ///
         Route::get('/all/admin/view', 'AllAdminView')->name('admin.all');
         Route::get('/add/admin', 'AddAdmin')->name('admin.add');
-        Route::post('/admin/store', 'AdminStore')->name('admin.store');
+        Route::post('/admin/store', 'AdminStore')->middleware(['check.user.limit', 'check.device'])->name('admin.store');
         Route::get('/admin/manage/edit/{id}', 'AdminManageEdit')->name('admin.manage.edit');
         Route::get('/admin/manage/delete/{id}', 'AdminManageDelete')->name('admin.manage.delete');
         Route::post('/admin/manage/update/{id}', 'AdminManageUpdate')->name('update.admin.manage');
@@ -501,6 +506,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/via-sale/invoice/{id}', 'viaSaleInvoice')->name('via.sale.invoice');
         Route::get('/via/sale/delete/{id}', 'ViaSaleProductDelete')->name('via.sale.delete');
     });
+    // User Limit Route
+    Route::controller(UserLimitController::class)->group(function () {
+        Route::get('/user-limit', 'index')->name('user.limit');
+        Route::get('/user-limit/view', 'view')->name('user.limit.view');
+        Route::post('/user-limit/store', 'store')->name('user.limit.store');
+        Route::get('/user-limit/edit/{id}', 'edit')->name('user.limit.edit');
+        Route::post('/user-limit/update/{id}', 'update')->name('abcalksjd');
+        Route::get('/user-limit/delete/{id}', 'delete')->name('user.limit.delete');
+    });
 });
+
 
 require __DIR__ . '/auth.php';

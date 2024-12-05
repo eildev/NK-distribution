@@ -18,7 +18,6 @@ return new class extends Migration
             $table->unsignedBigInteger('supplier_id')->unsigned();
             $table->foreign('supplier_id')->references('id')->on('suppliers')->onDelete('cascade');
             $table->date('purchase_date');
-            $table->integer('purchase_by')->nullable();
             $table->decimal('total_quantity', 12, 2);
             $table->decimal('total_amount', 12, 2);
             $table->string('invoice')->nullable();

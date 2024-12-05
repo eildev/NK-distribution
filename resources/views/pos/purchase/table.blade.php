@@ -5,12 +5,8 @@
             <td>
                 <a href="{{ route('purchase.invoice', $data->id) }}">#{{ $data->invoice ?? $data->id }}</a>
             </td>
-            <td>
-                <a href="{{ route('supplier.profile', $data->supplier->id) }}">
-                    {{ $data->supplier->name ?? '' }}
-                </a>
-            </td>
-            <td>{{ $data->purchse_date ?? 0 }}</td>
+            <td>{{ $data->supplier->name ?? '' }}</td>
+            <td>{{ $data->purchase_date ?? 0 }}</td>
             <td>
                 @php
                     $totalItems = $data->purchaseItem->count();
@@ -19,10 +15,7 @@
                 @endphp
                 <ul>
                     @foreach ($displayItems as $items)
-                        <li>
-                            <a
-                                href="{{ route('product.ledger', $items->product->id) }}">{{ $items->product->name ?? '' }}</a>
-                        </li>
+                        <li>{{ $items->product->name ?? '' }}</li>
                     @endforeach
 
                     @if ($totalItems > 5)

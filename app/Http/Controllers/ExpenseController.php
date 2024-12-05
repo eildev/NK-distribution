@@ -128,7 +128,7 @@ class ExpenseController extends Controller
                 $accountTransaction->account_id =  $request->bank_account_id;
                 if ($expense->amount > $request->amount) {
                     $accountTransaction->credit = $request->amount;
-                    $accountTransaction->balance = $oldBalance->balance + ($request->amount - $expense->amount);
+                    $accountTransaction->balance = $oldBalance->balance + $request->amount;
                 } else {
                     $accountTransaction->debit = $request->amount - $expense->amount;
                     $accountTransaction->balance = $oldBalance->balance - ($request->amount - $expense->amount);

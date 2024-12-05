@@ -20,7 +20,11 @@ class EmployeeController extends Controller
 
     public function EmployeeView()
     {
-        $employees = $this->employee_repo->ViewAllEmployee();
+        if(Auth::user()->id == 1){
+            $employees = Employee::all();
+        }else{
+            $employees = Employee::where('branch_id', Auth::user()->branch_id)->latest()->get();
+        }
         return view('pos.employee.view_employee', compact('employees'));
     } //
     public function EmployeeAdd()
@@ -29,7 +33,14 @@ class EmployeeController extends Controller
     } //
     public function EmployeeStore(Request $request)
     {
-
+        // dd($request->image);
+        $request->validate([
+            'full_name' => 'required',
+            'email' => 'required',
+            'phone' => 'required',
+            'address' => 'required',
+            'salary' => 'required',
+        ]);
         if ($request->image) {
             $employee = new Employee();
             $imageName = rand() . '.' . $request->image->extension();
@@ -46,7 +57,7 @@ class EmployeeController extends Controller
         $employee->nid = $request->nid;
         $employee->designation = $request->designation;
         $employee->status = 0;
-        // $employee->pic = $imageName;
+        $employee->pic = $imageName ?? '';
         $employee->created_at = Carbon::now();
         $employee->save();
         $notification = array(
@@ -63,6 +74,13 @@ class EmployeeController extends Controller
     public function EmployeeUpdate(Request $request, $id)
     {
         // dd($request->all());
+        $request->validate([
+            'full_name' => 'required',
+            'email' => 'required',
+            'phone' => 'required',
+            'address' => 'required',
+            'salary' => 'required',
+        ]);
         $employee = Employee::findOrFail($id);
         $employee->branch_id = Auth::user()->branch_id;
         $employee->full_name = $request->full_name;

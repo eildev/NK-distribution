@@ -13,7 +13,6 @@ use App\Models\PurchaseItem;
 use App\Models\Stock;
 use App\Models\Supplier;
 use App\Models\Transaction;
-use App\Models\User;
 use PDF;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -25,18 +24,23 @@ class PurchaseController extends Controller
     public function index()
     {
         $category = Category::where('slug', 'via-sell')->first();
-        $query = Product::orderBy('stock', 'asc');
-
-        if (Auth::user()->id != 1) {
-            $query->where('branch_id', Auth::user()->branch_id);
-        }
+        $products = collect();
 
         if ($category) {
-            $query->where('category_id', '!=', $category->id);
+            $products = Product::withSum('stockQuantity', 'stock_quantity') // Sum the stock_quantity
+                ->where('category_id', '!=', $category->id)
+                ->orderBy('stock_quantity_sum_stock_quantity', 'asc') // Explicitly reference the stock_quantity_sum
+                ->get();
+        } else {
+            $products = Product::withSum('stockQuantity', 'stock_quantity')
+                ->orderBy('stock_quantity_sum_stock_quantity', 'asc')
+                ->get();
         }
-
-        $products = $query->get();
-
+        $branchId = Auth::user()->branch_id;
+        $products = $products->map(function ($product) use ($branchId) {
+            $branchStockQuantity = $product->stockQuantity->where('branch_id', $branchId)->sum('stock_quantity');
+            return $product->setAttribute('branch_stock_quantity', $branchStockQuantity);
+        });
         return view('pos.purchase.purchase', compact('products'));
     }
 
@@ -70,7 +74,6 @@ class PurchaseController extends Controller
                 $purchase->branch_id = Auth::user()->branch_id;
                 $purchase->supplier_id = $request->supplier_id;
                 $purchase->purchase_date =  $purchaseDate;
-                $purchase->purchase_by =  Auth::user()->id;
                 $purchase->total_quantity =  $totalQty;
                 $purchase->total_amount =  $totalAmount;
                 if ($request->invoice) {
@@ -121,12 +124,19 @@ class PurchaseController extends Controller
                     $items->total_price = $request->unit_price[$i] * $request->quantity[$i];
                     $items->save();
 
-
-                    $product = Product::findOrFail($request->product_id[$i]);
-                    $product->stock += $request->quantity[$i];
-                    $product->cost = $request->unit_price[$i];
-                    $product->price = $request->sell_price[$i];
-                    $product->save();
+                    $stock = Stock::where('branch_id', Auth::user()->branch_id)->where('product_id', $request->product_id[$i])->first();
+                    if ($stock) {
+                        // If stock exists, update the quantity
+                        $stock->stock_quantity += $request->quantity[$i];
+                        $stock->save();
+                    } else {
+                        // Create a new Stock instance
+                        $stock = new Stock();
+                        $stock->branch_id = Auth::user()->branch_id ?? 1; // Use null coalescing operator
+                        $stock->product_id = $request->product_id[$i];
+                        $stock->stock_quantity = $request->quantity[$i]; // Assign the initial quantity
+                        $stock->save();
+                    }
                 }
                 // product Carrying Cost carrying cost
                 // actual payment CRUD
@@ -169,19 +179,13 @@ class PurchaseController extends Controller
                 $transaction = new Transaction;
                 $transaction->branch_id = Auth::user()->branch_id;
                 $transaction->date =   $purchaseDate;
-                $transaction->processed_by =  Auth::user()->id;
                 $transaction->payment_type = 'pay';
                 $transaction->particulars = 'Purchase#' . $purchaseId;
                 $transaction->supplier_id = $request->supplier_id;
                 $transaction->payment_method = $request->payment_method;
-                if ($request->carrying_cost > 0) {
-                    $transaction->credit = $request->total_payable - $request->carrying_cost;
-                    $transaction->debit = $request->sub_total - $request->carrying_cost;
-                } else {
-                    $transaction->credit = $request->total_payable;
-                    $transaction->debit = $request->sub_total;
-                }
-                $transaction->balance = $request->sub_total - $request->total_payable;
+                $transaction->debit = $request->total_payable;
+                $transaction->credit = $request->sub_total;
+                $transaction->balance = $request->total_payable - $request->sub_total;
                 $transaction->save();
 
                 // Supplier Crud
@@ -223,16 +227,7 @@ class PurchaseController extends Controller
     public function invoice($id)
     {
         $purchase = Purchase::findOrFail($id);
-        $branch = Branch::findOrFail($purchase->branch_id);
-        $supplier = Supplier::findOrFail($purchase->supplier_id);
-        $products = PurchaseItem::where('purchase_id', $purchase->id)->get();
-        if ($purchase->purchase_by) {
-            $authName = User::findOrFail($purchase->purchase_by)->name;
-        } else {
-            $authName = "";
-        }
-
-        return view('pos.purchase.invoice', compact('purchase', 'branch', 'supplier', 'products', 'authName'));
+        return view('pos.purchase.invoice', compact('purchase'));
     }
 
     // Money Receipt
@@ -389,7 +384,6 @@ class PurchaseController extends Controller
                     $transaction = Transaction::where('particulars', 'Purchase#' . $id)->first();
                     $transaction->branch_id = Auth::user()->branch_id;
                     $transaction->date =   $purchaseDate;
-                    $transaction->processed_by =  Auth::user()->id;
                     $transaction->payment_type = 'pay';
                     $transaction->particulars = 'Purchase#' . $id;
                     $transaction->supplier_id = $request->supplier_id;
@@ -461,6 +455,9 @@ class PurchaseController extends Controller
                     }
                     $purchase->save();
 
+
+
+
                     return response()->json([
                         'status' => 200,
                         'purchaseId' => $purchase->id,
@@ -505,9 +502,7 @@ class PurchaseController extends Controller
 
         if ($purchase->carrying_cost) {
             $expense = Expense::where('purpose', 'Purchase' . $id)->first();
-            if ($expense) {
-                $expense->delete();
-            }
+            $expense->delete();
         }
 
         $transaction = Transaction::where('particulars', 'Purchase#' . $id)->first();

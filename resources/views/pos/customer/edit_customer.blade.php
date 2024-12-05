@@ -36,18 +36,17 @@
                                         placeholder="Enter Customer email">
                                 </div>
                             </div><!-- Col -->
-                            {{-- <div class="col-sm-6">
+                            <div class="col-sm-6">
                                 <div class="mb-3">
                                     <label class="form-label">Wallet Balance</label>
                                     <input type="number" class="form-control" value="{{ $customer->wallet_balance }}"
                                         name="wallet_balance" placeholder="0.00" readonly>
                                 </div>
-                            </div><!-- Col --> --}}
-                            <div class="col-sm-6">
+                            </div><!-- Col -->
+                            <div class="col-sm-12">
                                 <div class="mb-3">
                                     <label class="form-label">Customer Address</label>
-                                    <input name="address" class="form-control" placeholder="Write Customer Address"
-                                        value="{{ $customer->address }}" />
+                                    <textarea name="address" class="form-control" placeholder="Write Customer Address" rows="4" cols="50">{{ $customer->address }}</textarea>
                                 </div>
                             </div><!-- Col -->
                         </div><!-- Row -->

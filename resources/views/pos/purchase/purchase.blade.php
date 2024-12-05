@@ -26,7 +26,7 @@
                                 <label for="ageSelect" class="form-label">Supplier <span
                                         class="text-danger">*</span></label>
                                 <select class="js-example-basic-single form-select select-supplier supplier_id"
-                                    data-width="100%" onchange="errorRemove(this);" name="supplier_id">
+                                    data-width="100%" onclick="errorRemove(this);" name="supplier_id">
                                 </select>
                                 <span class="text-danger supplier_id_error"></span>
                             </div>
@@ -51,7 +51,7 @@
                                         <option selected disabled>Select Products</option>
                                         @foreach ($products as $product)
                                             <option value="{{ $product->id }}">{{ $product->name ?? '' }}
-                                                ({{ $product->stock ?? 0 }}
+                                                ({{ $product->stock_quantity_sum_stock_quantity ?? 0 }}
                                                 {{ $product->unit->name ?? '' }})
                                             </option>
                                         @endforeach
@@ -87,9 +87,6 @@
                         <div class="mb-3">
                             <h6 class="card-title">Purchase Table</h6>
                         </div>
-                        <div class="mb-2">
-                            <p class="text-danger">Sell Price must be greater than Cost Price</p>
-                        </div>
 
                         <div id="" class="table-responsive">
                             <table class="table">
@@ -97,8 +94,7 @@
                                     <tr>
                                         <th>#SL</th>
                                         <th>Product</th>
-                                        <th>Cost Price</th>
-                                        <th>Sell Price</th>
+                                        <th>Rate</th>
                                         <th>Qty</th>
                                         <th>Sub Total</th>
                                         <th>
@@ -110,7 +106,6 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td></td>
                                         <td></td>
                                         <td></td>
                                         <td></td>
@@ -152,7 +147,7 @@
 
                         <div class="my-3">
                             <button class="btn btn-primary payment_btn" data-bs-toggle="modal"
-                                data-bs-target="#paymentModal" disabled><i class="fa-solid fa-money-check-dollar"></i>
+                                data-bs-target="#paymentModal"><i class="fa-solid fa-money-check-dollar"></i>
                                 Payment</button>
                         </div>
                     </div>
@@ -204,6 +199,8 @@
                         </div>
                         {{-- <form id="signupForm" class="supplierForm row"> --}}
                         <div class="supplierForm row">
+
+
                             <div class="mb-3 col-md-6">
                                 <label for="name" class="form-label">Transaction Method <span
                                         class="text-danger">*</span></label>
@@ -261,52 +258,26 @@
 
 
     <script>
-        // remove error
+        // error remove
         function errorRemove(element) {
-            tag = element.tagName.toLowerCase();
             if (element.value != '') {
-                // console.log('ok');
-                if (tag == 'select') {
-                    $(element).closest('.mb-3').find('.text-danger').hide();
-                } else {
-                    $(element).siblings('span').hide();
-                    $(element).css('border-color', 'green');
-                }
+                $(element).siblings('span').hide();
+                $(element).css('border-color', 'green');
             }
         }
-
         // Function to recalculate total
         function calculateTotal() {
             let total = 0;
             $('.quantity').each(function() {
                 let productId = $(this).attr('product-id');
                 let qty = parseFloat($(this).val()) || 1;
-                let cost = parseFloat($('.product_price' + productId).val()) || 0;
-                $('.product_subtotal' + productId).val((qty * cost).toFixed(2));
-                total += qty * cost;
+                let price = parseFloat($('.product_price' + productId).val());
+                $('.product_subtotal' + productId).val((qty * price).toFixed(2));
+                total += qty * price;
             });
             $('.total').val(total.toFixed(2));
             let carrying_cost = parseFloat($('.carrying_cost').val()) || 0;
             $('.grand_total').val((carrying_cost + total).toFixed(2));
-        }
-
-        // sell price check
-        function checkSellPrice() {
-            $('.quantity').each(function() {
-                let productId = $(this).attr('product-id');
-                let cost = parseFloat($('.product_price' + productId).val()) || 0;
-                let price = parseFloat($('.sell_price' + productId).val()) || 0;
-                if (cost > price) {
-                    $('.sell_price' + productId).css('border-color', 'red');
-                    $(name).focus();
-                    $(`.sell_price${productId}_error`).show().text('Sell Price must be greater than Cost Price');
-                    $('.payment_btn').prop('disabled', true);
-                } else {
-                    $(`.sell_price${productId}_error`).hide();
-                    $('.sell_price' + productId).css('border-color', 'green');
-                    $('.payment_btn').prop('disabled', false);
-                }
-            });
         }
 
         // payFunc
@@ -320,13 +291,12 @@
                 $('.final_due').val(0);
             }
         }
-
         $(document).ready(function() {
             // show error
             function showError(name, message) {
-                $(name).css('border-color', 'red'); // Highlight input with red border
-                $(name).focus(); // Set focus to the input field
-                $(`${name}_error`).show().text(message); // Show error message
+                $(name).css('border-color', 'red');
+                $(name).focus();
+                $(`${name}_error`).show().text(message);
             }
 
 
@@ -404,6 +374,8 @@
             }
 
 
+
+
             // select product
             $('.product_select').change(function() {
                 let id = $(this).val();
@@ -428,16 +400,13 @@
                                         </td>
                                         <td>
                                             <input type="hidden" class="product_id" name="product_id[]" readonly value="${product.id ?? 0}" />
-                                            <input type="number" class="form-control product_price${product.id} input-small"  name="unit_price[]" onkeyup="calculateTotal();" value="${Math.round(product.cost) ?? 0}" />
-                                        </td>
-                                        <td>
-                                            <input type="number" class="form-control sell_price${product.id} input-small mb-0" name="sell_price[]" onkeyup="checkSellPrice();" value="${Math.round(product.price) ?? 0}" />
-                                           
-                                            <span class="text-danger sell_price${product.id}_error" style="font-size: 10px;"></span>
+                                            <input type="number" class="form-control product_price${product.id} border-0 "  name="unit_price[]" readonly value="${product.cost ?? 0}" />
                                         </td>
                                         <td class="text-satrt">
                                            <div class="d-flex justify-content-center align-items-center ">
                                              <input type="number" product-id="${product.id}" class="form-control input-small quantity me-3" onkeyup="calculateTotal();" name="quantity[]"  value="1"   /> <span>${res.unit}</span>
+
+                                            <div class="validation-message text-danger" style="display: none;">Please enter a quantity of at least 1.</div>
                                             </div>
                                         </td>
                                         <td>
@@ -454,8 +423,6 @@
                                     updateSLNumbers();
                                     calculateTotal();
                                     updateTotalQuantity();
-
-                                    $('.payment_btn').prop('disabled', false);
                                 } else {
                                     toastr.warning(res.message);
                                 }
@@ -463,7 +430,7 @@
                         })
                     }
                 } else {
-                    showError('.supplier_id', 'Please Select Supplier');
+                    toastr.warning('Please Select Supplier');
                 }
 
             })
@@ -492,8 +459,6 @@
                 let grandTotal = cumtomer_due + subtotal;
                 $('.grandTotal').val(grandTotal);
                 $('.paying_items').text(totalQuantity);
-                $('.total_payable').focus();
-
                 var isValid = true;
                 //Quantity Message
                 $('.quantity').each(function() {
@@ -508,7 +473,10 @@
                     // alert('Please enter a quantity of at least 1 for all products.');
                     toastr.error('Please enter a quantity of at least 1.)');
                     $('#paymentModal').modal('hide');
+                } else {
+
                 }
+                //End Quantity Message
             })
 
             // paid amount

@@ -9,12 +9,16 @@
     </nav>
 
     <div class="row">
-        <div class="col-md-12   grid-margin stretch-card filter_box">
+        <div class="col-md-12 grid-margin stretch-card filter_box">
             <div class="card">
                 <div class="card-body">
                     <div class="row mb-3">
                         @php
+                             if(Auth::user()->id == 1){
                             $customers = App\Models\Customer::all();
+                            }else{
+                                $customers = App\Models\Customer::where('branch_id', Auth::user()->branch_id)->get();
+                            }
                         @endphp
                         <div class="col-md-4">
                             <div class="input-group flatpickr" id="flatpickr-date">
@@ -197,14 +201,14 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        ${transactions.map((transaction) => `
-                <tr>
-                    <td>${transaction.date ?? ''}</td>
-                    <td>${transaction.particulars ?? ''}</td>
-                    <td>৳ ${transaction.debit ?? ''}</td>
-                    <td>৳ ${transaction.credit ?? ''}</td>
-                    <td>৳ ${transaction.balance ?? 0}</td>
-                </tr>
+                        ${transactions.map((transaction) => `
+                        <tr>
+                        <td>${transaction.date ?? ''}</td>
+                        <td>${transaction.particulars ?? ''}</td>
+                        <td>৳ ${transaction.debit ?? ''}</td>
+                        <td>৳ ${transaction.credit ?? ''}</td>
+                        <td>৳ ${transaction.balance ?? 0}</td>
+                        </tr>
             `).join('')}
                                     </tbody>
                                     <tfoot>

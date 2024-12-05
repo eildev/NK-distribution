@@ -40,12 +40,12 @@
                                             $key++;
                                         @endphp
                                         <td>{{ $report['month'] }}</td>
-                                        <td> {{ $report['totalPurchaseCost'] }}</td>
-                                        <td> {{ $report['totalSale'] }}</td>
-                                        <td> {{ $report['totalProfit'] }}</td>
-                                        <td> {{ $report['totalExpense'] }}</td>
-                                        <td> {{ $report['totalSalary'] }}</td>
-                                        <td> {{ $report['finalProfit'] }}</td>
+                                        <td> {{ number_format($report['totalPurchaseCost'], 2) }}</td>
+                                        <td> {{ number_format($report['totalSale'], 2) }}</td>
+                                        <td> {{ number_format($report['totalProfit'], 2) }}</td>
+                                        <td> {{ number_format($report['totalExpense'], 2) }}</td>
+                                        <td> {{ number_format($report['totalSalary'], 2) }}</td>
+                                        <td> {{ number_format($report['finalProfit'], 2) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>

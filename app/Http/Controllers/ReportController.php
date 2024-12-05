@@ -23,6 +23,7 @@ use App\Models\AccountTransaction;
 use App\Models\Bank;
 use App\Models\Branch;
 use App\Models\Returns;
+use App\Models\Stock;
 use App\Models\ViaSale;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -34,12 +35,10 @@ class ReportController extends Controller
     {
 
         $todayDate = now()->toDateString();
-
         $branchData = [];
         //Today Invoice
         if (Auth::user()->id == 1) {
             $branches = Branch::all();
-
             foreach ($branches as $branch) {
                 $branchId = $branch->id;
                 $todayInvoiceAmount = Sale::whereDate('sale_date', $todayDate)->where('branch_id', $branchId)->sum('receivable');
@@ -61,11 +60,6 @@ class ReportController extends Controller
             $todayTotalSaleAmount = Sale::whereDate('sale_date', $todayDate)->sum('receivable');
             $todayTotalSaleQty = Sale::whereDate('sale_date', $todayDate)->sum('quantity');
             $todayTotalSaleDue = Sale::whereDate('sale_date', $todayDate)->sum('due');
-            
-             // Today sales cash report
-            $totalSaleCashReport = Transaction::where('customer_id', '!=', null)
-                ->whereDate('created_at', $todayDate)
-                ->get();
 
             //Today Purchase
             $todayPurchaseItems = PurchaseItem::whereDate('created_at', $todayDate);
@@ -115,11 +109,6 @@ class ReportController extends Controller
                 ->whereDate('sale_date', $todayDate)->sum('quantity');
             $todayTotalSaleDue = Sale::where('branch_id', Auth::user()->branch_id)
                 ->whereDate('sale_date', $todayDate)->sum('due');
-                
-            // Today sales cash report
-            $totalSaleCashReport = Transaction::where('branch_id', Auth::user()->branch_id)->where('customer_id', '!=', null)
-                ->whereDate('created_at', $todayDate)
-                ->get();
 
             //Today Purchase
             $todayPurchaseItems = PurchaseItem::whereHas('Purchas', function ($query) {
@@ -166,7 +155,7 @@ class ReportController extends Controller
             $totalSalary = $salary->sum('debit');
             $totalSalaryDue = $salary->sum('balance');
         }
-        return view('pos.report.today.today', compact('todayInvoiceAmount', 'totalSales', 'today_grand_total', 'todayExpenseAmount', 'totalSalary', 'expense', 'todayTotalSaleAmount', 'todayTotalSaleDue', 'todayTotalSaleQty', 'purchases', 'todayTotalPurchaseDue', 'todayTotalPurchaseQty', 'todayTotalPurchaseAmount', 'salary', 'branchData', 'totalSaleCashReport'));
+        return view('pos.report.today.today', compact('todayInvoiceAmount', 'totalSales', 'today_grand_total', 'todayExpenseAmount', 'totalSalary', 'expense', 'todayTotalSaleAmount', 'todayTotalSaleDue', 'todayTotalSaleQty', 'purchases', 'todayTotalPurchaseDue', 'todayTotalPurchaseQty', 'todayTotalPurchaseAmount', 'salary', 'branchData'));
     }
     // summary report function
     public function summaryReport()
@@ -178,9 +167,9 @@ class ReportController extends Controller
                 $branchId = $branch->id;
 
                 $sale = Sale::where('branch_id', $branchId)->get();
-                $saleAmount = $sale->sum('receivable');
+                $saleAmount = $sale->sum('change_amount');
                 $purchase = Purchase::where('branch_id', $branchId)->get();
-                $purchaseAmount = $purchase->sum('grand_total');
+                $purchaseAmount = $purchase->sum('sub_total');
                 $expense =  Expense::where('branch_id', $branchId)->get();
                 $expenseAmount = $expense->sum('amount');
                 $sellProfit = $sale->sum('profit');
@@ -293,28 +282,39 @@ class ReportController extends Controller
     // low stock report function
     public function lowStockReport()
     {
-        if (Auth::user()->id == 1) {
-            $products = Product::where('stock', '<=', 10)
-                ->get();
-        } else {
-            $products = Product::where('branch_id', Auth::user()->branch_id)
-                ->where('stock', '<=', 10)
-                ->get();
-        }
+        $stock = Stock::get();
+        // if (Auth::user()->id == 1) {
+        //     $products = Product::withSum('stockQuantity', 'stock_quantity') // Note: 'stockQuantity' matches the relationship name
+        //     ->having('stock_quantity_sum', '<=', 10)
+        //     ->orderBy('stock_quantity_sum', 'asc') // or 'desc' for descending order
+        //     ->get();
+        // } else {
+            $products = Product::withSum(['stockQuantity as stock_quantity_sum' => function ($query) {
+                $query->where('branch_id', Auth::user()->branch_id);
+            }], 'stock_quantity')
+            ->having('stock_quantity_sum', '<=', 10)
+            ->orderBy('stock_quantity_sum', 'asc') // or 'desc' for descending order
+            ->get();
+        // }
         return view('pos.report.products.low_stock', compact('products'));
     }
-    // Top Products  function
+    // Top Products function
     public function topProducts()
     {
         if (Auth::user()->id == 1) {
-            $products = Product::orderBy('total_sold', 'desc')
-                ->take(20)
-                ->get();
+            $products = Product::withSum(['stockQuantity as stock_quantity_sum' => function ($query) {
+            }], 'stock_quantity')
+            ->where('total_sold', '>=', 10)
+            ->orderBy('total_sold', 'asc') // or 'desc' for descending order
+            ->orderBy('stock_quantity_sum', 'asc') // or 'desc' for descending order
+            ->get();
         } else {
-            $products = Product::where('branch_id', Auth::user()->branch_id)
-                ->orderBy('total_sold', 'desc')
-                ->take(20)
-                ->get();
+            $products = Product::withSum(['stockQuantity as stock_quantity_sum' => function ($query) {
+                $query->where('branch_id', Auth::user()->branch_id);
+            }], 'stock_quantity')
+            ->where('total_sold', '>=', 10)
+            ->orderBy('stock_quantity_sum', 'asc') // or 'desc' for descending order
+            ->get();
         }
         return view('pos.report.products.top_products', compact('products'));
     }
@@ -364,9 +364,13 @@ class ReportController extends Controller
         if (Auth::user()->id == 1) {
             $damageItem = Damage::all();
         } else {
-            $damageItem = Damage::where('branch_id', Auth::user()->branch_id)->get();
+            $damageItem = Damage::where('branch_id', Auth::user()->branch_id)->with('product')->get();
         }
-        return view('pos.report.damages.damage', compact('damageItem'));
+        foreach ($damageItem as $damage) {
+             $damage->total_cost = $damage->product->cost * $damage->qty;
+        }
+        $totalSum = $damageItem->sum('total_cost');
+        return view('pos.report.damages.damage', compact('damageItem','totalSum'));
     }
 
     public function DamageProductFilter(Request $request)
@@ -382,7 +386,11 @@ class ReportController extends Controller
                 return $query->where('branch_id', $request->branchId);
             })
             ->get();
-        return view('pos.report.damages.damage-filter-table', compact('damageItem'))->render();
+            foreach ($damageItem as $damage) {
+                $damage->total_cost = $damage->product->cost * $damage->qty;
+           }
+           $totalSum = $damageItem->sum('total_cost');
+        return view('pos.report.damages.damage-filter-table', compact('damageItem','totalSum'))->render();
     } //
 
     // customer Ledger report function
@@ -409,6 +417,7 @@ class ReportController extends Controller
             'transactions' => $transactions,
             'customer' => $customer,
         ]);
+
         // return view("pos.report.supplier.show_ledger", compact('supplier', 'transactions'))->render();
     }
     // supplier Ledger report function
@@ -446,14 +455,43 @@ class ReportController extends Controller
     //stock Report function
     public function stockReport()
     {
-        if (Auth::user()->id == 1) {
-            $products = Product::all();
-        } else {
-            $products = Product::where('branch_id', Auth::user()->branch_id)->get();
-        }
-        return view('pos.report.products.stock', compact('products'));
-    } //
 
+        $products = Product::withSum(['stockQuantity as stock_quantity_sum' => function ($query) {
+            $query->where('branch_id', Auth::user()->branch_id);
+        }], 'stock_quantity')
+        ->orderBy('stock_quantity_sum', 'asc') // or 'desc' for descending order
+        ->get();
+        $products->each(function ($product) {
+            $product->total_stock_value = $product->cost * $product->stock_quantity_sum;
+         });
+            $totalStockValueSum = $products->sum('total_stock_value');
+        return view('pos.report.products.stock', compact('products','totalStockValueSum'));
+    } //
+    public function stockShowByBranch($branchId){
+        $branch = Branch::findOrFail($branchId);
+        $products = Product::withSum(['stockQuantity as stock_quantity_sum' => function ($query) use ($branch) {
+            $query->where('branch_id', $branch->id);
+        }], 'stock_quantity')
+        ->orderBy('stock_quantity_sum', 'asc') // or 'desc' for descending order
+        ->get();
+        $products->each(function ($product) {
+            $product->total_stock_value = $product->cost * $product->stock_quantity_sum;
+         });
+            $totalStockValueSum = $products->sum('total_stock_value');
+
+        return view('pos.report.products.superadmin-stock', compact('products', 'totalStockValueSum','branch'));
+    }
+    public function lowStockShowByBranch($branchId){
+        $stock = Stock::get();
+        $branch = Branch::findOrFail($branchId);
+            $products = Product::withSum(['stockQuantity as stock_quantity_sum' => function ($query)  use ($branch) {
+                $query->where('branch_id', $branch->id);
+            }], 'stock_quantity')
+            ->having('stock_quantity_sum', '<=', 10)
+            ->orderBy('stock_quantity_sum', 'asc') // or 'desc' for descending order
+            ->get();
+        return view('pos.report.products.superadmin_low_stock', compact('products','branch'));
+    }
     ////////////////Account Transaction Method  //////////////
     public function AccountTransactionView()
     {
@@ -516,34 +554,51 @@ class ReportController extends Controller
     public function ProductInfoReport()
     {
         if (Auth::user()->id == 1) {
-            $productInfo = Product::all();
+            // $productInfo = Product::all();
+            $productInfo = Product::withSum('stockQuantity', 'stock_quantity')->latest()->get();
         } else {
-            $productInfo = Product::where('branch_id', Auth::user()->branch_id)->latest()->get();
+            $productInfo = Product::where('branch_id', Auth::user()->branch_id)
+                ->withSum('stockQuantity', 'stock_quantity')
+                ->latest()
+                ->get();
+            // $productInfo = Product::where('branch_id', Auth::user()->branch_id)->latest()->get();
         }
 
         return view('pos.report.products.product_info_report', compact('productInfo'));
     } //
-    // public function ProductSubCategoryShow($categoryId){
-    //     $subCategory =SubCategory::where('category_id',$categoryId)->get();
-    //     return  json_encode($subCategory);
-    // }
 
     public function ProductInfoFilter(Request $request)
     {
-        // dd($request->filterBrand);
-        $productInfo = Product::when($request->filterStartPrice, function ($query) use ($request) {
-            return $query->where('price', '<=', (float) $request->filterStartPrice);
-        })
-            ->when($request->filterBrand != "Select Brand", function ($query) use ($request) {
-                return $query->where('brand_id', $request->filterBrand);
+        if (Auth::user()->id == 1) {
+            $productInfo = Product::withSum('stockQuantity', 'stock_quantity')->when($request->filterStartPrice, function ($query) use ($request) {
+                return $query->where('price', '<=', (float) $request->filterStartPrice);
             })
-            ->when($request->FilterCat != "Select Category", function ($query) use ($request) {
-                return $query->where('category_id', $request->FilterCat);
+                ->when($request->filterBrand != "Select Brand", function ($query) use ($request) {
+                    return $query->where('brand_id', $request->filterBrand);
+                })
+                ->when($request->FilterCat != "Select Category", function ($query) use ($request) {
+                    return $query->where('category_id', $request->FilterCat);
+                })
+                ->when($request->filterSubcat != "Select Sub Category", function ($query) use ($request) {
+                    return $query->where('subcategory_id', $request->filterSubcat);
+                })
+                ->get();
+        } else {
+            $productInfo = Product::where('branch_id', Auth::user()->branch_id)->withSum('stockQuantity', 'stock_quantity')->when($request->filterStartPrice, function ($query) use ($request) {
+                return $query->where('price', '<=', (float) $request->filterStartPrice);
             })
-            ->when($request->filterSubcat != "Select Sub Category", function ($query) use ($request) {
-                return $query->where('subcategory_id', $request->filterSubcat);
-            })
-            ->get();
+                ->when($request->filterBrand != "Select Brand", function ($query) use ($request) {
+                    return $query->where('brand_id', $request->filterBrand);
+                })
+                ->when($request->FilterCat != "Select Category", function ($query) use ($request) {
+                    return $query->where('category_id', $request->FilterCat);
+                })
+                ->when($request->filterSubcat != "Select Sub Category", function ($query) use ($request) {
+                    return $query->where('subcategory_id', $request->filterSubcat);
+                })
+                ->get();
+        }
+
         return view('pos.report.products.product-info-filter-rander-table', compact('productInfo'))->render();
     }
     ///SMS Report Method
@@ -587,21 +642,28 @@ class ReportController extends Controller
                     ->where('payment_type', 'pay')
                     ->whereDate('created_at',  $date)
                     ->sum('credit');
-                $addBalance = AccountTransaction::where(function($query) {
+                $addBalance = AccountTransaction::where(function ($query) {
                     $query->where('purpose', 'Add Bank Balance')
-                          ->orWhere('purpose', 'Bank');
-                    })
+                        ->orWhere('purpose', 'Bank');
+                })
                     ->whereDate('created_at',  $date)
                     ->sum('credit');
                 $previousDayBalance = 0;
-                foreach ($banks as $bank) {
-                    $transaction = AccountTransaction::where('account_id', $bank->id)
-                        ->whereDate('created_at', '<', $date)
-                        ->latest('created_at')
-                        ->first();
+                $lastTransactionDate = AccountTransaction::whereDate('created_at', '<', $date)
+                    ->latest('created_at')
+                    ->first();
+                if ($lastTransactionDate) {
+                    $lastTransactionDate = $lastTransactionDate->created_at->toDateString();
 
-                    if ($transaction) {
-                        $previousDayBalance += $transaction->balance;
+                    foreach ($banks as $bank) {
+                        $transaction = AccountTransaction::where('account_id', $bank->id)
+                            ->whereDate('created_at', $lastTransactionDate)
+                            ->latest('created_at')
+                            ->first();
+
+                        if ($transaction) {
+                            $previousDayBalance += $transaction->balance;
+                        }
                     }
                 }
 
@@ -700,21 +762,30 @@ class ReportController extends Controller
                     ->whereDate('created_at',  $date)
                     ->sum('credit');
                 $addBalance = AccountTransaction::where('branch_id', Auth::user()->branch_id)
-                    ->where(function($query) {
-                    $query->where('purpose', 'Add Bank Balance')
-                          ->orWhere('purpose', 'Bank');
+                    ->where(function ($query) {
+                        $query->where('purpose', 'Add Bank Balance')
+                            ->orWhere('purpose', 'Bank');
                     })
                     ->whereDate('created_at',  $date)
                     ->sum('credit');
                 $previousDayBalance = 0;
-                foreach ($banks as $bank) {
-                    $transaction = AccountTransaction::where('account_id', $bank->id)
-                        ->whereDate('created_at', '<', $date)
-                        ->latest('created_at')
-                        ->first();
+                $lastTransactionDate = AccountTransaction::where('branch_id', Auth::user()->branch_id)
+                    ->whereDate('created_at', '<', $date)
+                    ->latest('created_at')
+                    ->first();
+                if ($lastTransactionDate) {
+                    $lastTransactionDate = $lastTransactionDate->created_at->toDateString();
 
-                    if ($transaction) {
-                        $previousDayBalance += $transaction->balance;
+                    foreach ($banks as $bank) {
+                        $transaction = AccountTransaction::where('branch_id', Auth::user()->branch_id)
+                            ->where('account_id', $bank->id)
+                            ->whereDate('created_at', $lastTransactionDate)
+                            ->latest('created_at')
+                            ->first();
+
+                        if ($transaction) {
+                            $previousDayBalance += $transaction->balance;
+                        }
                     }
                 }
 
@@ -824,21 +895,28 @@ class ReportController extends Controller
                 ->where('payment_type', 'pay')
                 ->whereDate('created_at',  $date)
                 ->sum('credit');
-            $addBalance = AccountTransaction::where(function($query) {
-                    $query->where('purpose', 'Add Bank Balance')
-                          ->orWhere('purpose', 'Bank');
-                })
+            $addBalance = AccountTransaction::where(function ($query) {
+                $query->where('purpose', 'Add Bank Balance')
+                    ->orWhere('purpose', 'Bank');
+            })
                 ->whereDate('created_at',  $date)
                 ->sum('credit');
             $previousDayBalance = 0;
-            foreach ($banks as $bank) {
-                $transaction = AccountTransaction::where('account_id', $bank->id)
-                    ->whereDate('created_at', '<', $date)
-                    ->latest('created_at')
-                    ->first();
+            $lastTransactionDate = AccountTransaction::whereDate('created_at', '<', $date)
+                ->latest('created_at')
+                ->first();
+            if ($lastTransactionDate) {
+                $lastTransactionDate = $lastTransactionDate->created_at->toDateString();
 
-                if ($transaction) {
-                    $previousDayBalance += $transaction->balance;
+                foreach ($banks as $bank) {
+                    $transaction = AccountTransaction::where('account_id', $bank->id)
+                        ->whereDate('created_at', $lastTransactionDate)
+                        ->latest('created_at')
+                        ->first();
+
+                    if ($transaction) {
+                        $previousDayBalance += $transaction->balance;
+                    }
                 }
             }
 
@@ -901,21 +979,30 @@ class ReportController extends Controller
                 ->whereDate('created_at',  $date)
                 ->sum('credit');
             $addBalance = AccountTransaction::where('branch_id', Auth::user()->branch_id)
-                ->where(function($query) {
+                ->where(function ($query) {
                     $query->where('purpose', 'Add Bank Balance')
-                          ->orWhere('purpose', 'Bank');
+                        ->orWhere('purpose', 'Bank');
                 })
                 ->whereDate('created_at',  $date)
                 ->sum('credit');
             $previousDayBalance = 0;
-            foreach ($banks as $bank) {
-                $transaction = AccountTransaction::where('account_id', $bank->id)
-                    ->whereDate('created_at', '<', $date)
-                    ->latest('created_at')
-                    ->first();
+            $lastTransactionDate = AccountTransaction::where('branch_id', Auth::user()->branch_id)
+                ->whereDate('created_at', '<', $date)
+                ->latest('created_at')
+                ->first();
+            if ($lastTransactionDate) {
+                $lastTransactionDate = $lastTransactionDate->created_at->toDateString();
 
-                if ($transaction) {
-                    $previousDayBalance += $transaction->balance;
+                foreach ($banks as $bank) {
+                    $transaction = AccountTransaction::where('branch_id', Auth::user()->branch_id)
+                        ->where('account_id', $bank->id)
+                        ->whereDate('created_at', $lastTransactionDate)
+                        ->latest('created_at')
+                        ->first();
+
+                    if ($transaction) {
+                        $previousDayBalance += $transaction->balance;
+                    }
                 }
             }
 
@@ -970,30 +1057,31 @@ class ReportController extends Controller
         $formattedDate = $date->format('d F Y');
         $report = [
             'date' => $formattedDate,
-            'totalSale' => $totalSale,
-            'dueCollection' => $dueCollection,
-            'otherCollection' => $otherCollection,
-            'adjustDueCollection' => $adjustDueCollection,
-            'addBalance' => $addBalance,
-            'viaSale' => $viaSale,
-            'previousDayBalance' => $previousDayBalance,
-            'totalIngoing' => $totalIngoing,
+            'totalSale' => number_format($totalSale, 2),
+            'dueCollection' => number_format($dueCollection, 2),
+            'otherCollection' => number_format($otherCollection, 2),
+            'adjustDueCollection' => number_format($adjustDueCollection, 2),
+            'addBalance' => number_format($addBalance, 2),
+            'viaSale' => number_format($viaSale, 2),
+            'previousDayBalance' => number_format($previousDayBalance, 2),
+            'totalIngoing' => number_format($totalIngoing, 2),
 
             // outgoing
-            'totalPurchaseCost' => $totalPurchaseCost,
-            'totalExpense' => $totalExpense,
-            'totalSalary' => $totalSalary,
-            'purchaseDuePay' => $purchaseDuePay,
-            'todayReturnAmount' => $todayReturnAmount,
-            'viaPayment' => $viaPayment,
-            'otherPaid' => $otherPaid,
-            'totalOutgoing' => $totalOutgoing,
+            'totalPurchaseCost' => number_format($totalPurchaseCost, 2),
+            'totalExpense' => number_format($totalExpense, 2),
+            'totalSalary' => number_format($totalSalary, 2),
+            'purchaseDuePay' => number_format($purchaseDuePay, 2),
+            'todayReturnAmount' => number_format($todayReturnAmount, 2),
+            'viaPayment' => number_format($viaPayment, 2),
+            'otherPaid' => number_format($otherPaid, 2),
+            'totalOutgoing' => number_format($totalOutgoing, 2),
 
             // profit
-            'totalProfit' => $totalProfit,
-            'finalProfit' => $finalProfit,
-            'totalBalance' => $totalBalance,
+            'totalProfit' => number_format($totalProfit, 2),
+            'finalProfit' => number_format($finalProfit, 2),
+            'totalBalance' => number_format($totalBalance, 2),
         ];
+
         return response()->json([
             'status' => '200',
             'report' => $report
@@ -1056,4 +1144,5 @@ class ReportController extends Controller
         // Pass the monthly reports array to the view
         return view('pos.report.yearly.yearly', compact('monthlyReports'));
     }
+
 }
