@@ -120,8 +120,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/customer/edit/{id}', 'CustomerEdit')->name('customer.edit');
         Route::post('/customer/update/{id}', 'CustomerUpdate')->name('customer.update');
         Route::get('/customer/delete/{id}', 'CustomerDelete')->name('customer.delete');
-         // customer profiling
-         Route::get('/customer/profile/{id}', 'CustomerProfile')->name('customer.profile');
+        // customer profiling
+        Route::get('/customer/profile/{id}', 'CustomerProfile')->name('customer.profile');
     });
 
     // Unit related route
@@ -194,8 +194,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/supplier/edit/{id}', 'edit')->name('supplier.edit');
         Route::post('/supplier/update/{id}', 'update')->name('supplier.update');
         Route::get('/supplier/destroy/{id}', 'destroy')->name('supplier.destroy');
-         // Supplier Profiling
-         Route::get('/supplier/profile/{id}', 'SupplierProfile')->name('supplier.profile');
+        // Supplier Profiling
+        Route::get('/supplier/profile/{id}', 'SupplierProfile')->name('supplier.profile');
     });
     // Expense related route(n)
     Route::controller(ExpenseController::class)->group(function () {
@@ -299,6 +299,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/add/investor', 'InvestmentStore');
         Route::get('/get/investor', 'GetInvestor');
         Route::get('/get/invoice/{id}', 'InvestorInvoice')->name('investor.invoice');
+        Route::get('/investor-details/{id}', 'investorDetails')->name('investor.details');
+
+        Route::post('/due/invoice/payment/transaction', 'invoicePaymentStore');
     });
     // pos setting related route
     Route::controller(PosSettingsController::class)->group(function () {
