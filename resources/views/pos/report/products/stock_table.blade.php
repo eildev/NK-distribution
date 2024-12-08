@@ -20,17 +20,18 @@
                 $branchId = Auth::user()->branch_id;
                 $totalPurchase = App\Models\PurchaseItem::whereHas('Purchas', function ($query) use ($branchId) {
                     $query->where('branch_id', $branchId);
-                })->where('product_id', $data->id)
-                ->sum('quantity');
+                })
+                    ->where('product_id', $data->id)
+                    ->sum('quantity');
                 $saleItems = App\Models\SaleItem::where('product_id', $data->id)->get();
                 $totalSalePrice = $saleItems->sum('sub_total');
                 $totalsaleQuantity = $saleItems->sum('qty');
                 $totalCost = $data->cost * $totalsaleQuantity;
                 $totalProfit = $totalSalePrice - $totalCost;
                 $totalDamage = $data->damage->sum('qty');
-              @endphp
+            @endphp
             <td>
-                {{ $totalPurchase  }} {{ $data->unit->name }}
+                {{ $totalPurchase }} {{ $data->unit->name }}
             </td>
 
             {{-- sold  --}}
@@ -46,7 +47,7 @@
             <td>
                 ৳ {{ $data->price ?? 0 }}
             </td>
-         
+
             <td>
                 @if ($data->stock_quantity_sum <= 10)
                     <span class="text-danger">
@@ -60,14 +61,13 @@
                 ৳ {{ $totalSalePrice ?? 0 }}
             </td>
             <td>
-                <span>৳</span> {{ $data->total_stock_value ?? 0}}
+                <span>৳</span> {{ $data->total_stock_value ?? 0 }}
             </td>
             <td>
                 ৳ {{ $totalProfit ?? 0 }}
             </td>
 
         </tr>
-
     @endforeach
 @else
     <tr>

@@ -7,16 +7,27 @@
                     #{{ $data->invoice_number ?? 0 }}
                 </a>
             </td>
-            <td>{{ $data->customer->name ?? '' }}
-                <br> ({{ $data->customer->phone ?? '' }})
+            <td>
+                <a href="{{ route('customer.profile', $data->customer->id) }}">
+                    {{ $data->customer->name ?? '' }}
+                </a>
             </td>
             <td>
+                @php
+                    $totalItems = $data->saleItem->count();
+                    $displayItems = $data->saleItem->take(5);
+                    $remainingItems = $totalItems - 5;
+                @endphp
                 <ul>
-                    @foreach ($data->saleItem as $item)
-                        <li>{{ $item->product->name ?? '' }}
-                            <br>({{ $item->product->barcode ?? '' }})
+                    @foreach ($displayItems as $items)
+                        <li>
+                            {{ $items->product->name ?? '' }}
                         </li>
                     @endforeach
+
+                    @if ($totalItems > 5)
+                        <li>and more {{ $remainingItems }}...</li>
+                    @endif
                 </ul>
             </td>
             <td>{{ $data->quantity ?? 0 }}</td>
