@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bank;
 use Illuminate\Http\Request;
 use App\Models\Customer;
 use App\Models\Branch;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Repositories\RepositoryInterfaces\CustomerInterfaces;
@@ -84,5 +86,15 @@ class CustomerController extends Controller
             'alert-type' => 'info'
         );
         return redirect()->back()->with($notification);
+    }
+    public function CustomerProfile($id)
+    {
+        $data = Customer::findOrFail($id);
+        $transactions = Transaction::where('customer_id', $data->id)->get();
+        $branch = Branch::findOrFail($data->branch_id);
+        $banks = Bank::latest()->get();
+        $isCustomer = true;
+
+        return view('pos.profiling.profiling', compact('data', 'transactions', 'branch', 'isCustomer', 'banks'));
     }
 }

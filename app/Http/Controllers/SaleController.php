@@ -617,8 +617,8 @@ class SaleController extends Controller
         }
 
         // Filter by date range if both start_date and end_date are provided
-        if ($request->start_date && $request->end_date) {
-            $saleQuery->whereBetween('sale_date', [$request->start_date, $request->end_date]);
+        if ($request->startDate && $request->endDate) {
+            $saleQuery->whereBetween('sale_date', [$request->startDate, $request->endDate]);
         }
 
         // Execute the query

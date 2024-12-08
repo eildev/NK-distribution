@@ -120,6 +120,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/customer/edit/{id}', 'CustomerEdit')->name('customer.edit');
         Route::post('/customer/update/{id}', 'CustomerUpdate')->name('customer.update');
         Route::get('/customer/delete/{id}', 'CustomerDelete')->name('customer.delete');
+         // customer profiling
+         Route::get('/customer/profile/{id}', 'CustomerProfile')->name('customer.profile');
     });
 
     // Unit related route
@@ -192,6 +194,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/supplier/edit/{id}', 'edit')->name('supplier.edit');
         Route::post('/supplier/update/{id}', 'update')->name('supplier.update');
         Route::get('/supplier/destroy/{id}', 'destroy')->name('supplier.destroy');
+         // Supplier Profiling
+         Route::get('/supplier/profile/{id}', 'SupplierProfile')->name('supplier.profile');
     });
     // Expense related route(n)
     Route::controller(ExpenseController::class)->group(function () {
