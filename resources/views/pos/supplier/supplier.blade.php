@@ -14,8 +14,8 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="card-title">Supplier Table</h6>
                         @if (Auth::user()->can('supplier.add'))
-                        <button class="btn btn-rounded-primary btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#exampleModalLongScollable"><i data-feather="plus"></i></button>
+                            <button class="btn btn-rounded-primary btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#exampleModalLongScollable"><i data-feather="plus"></i></button>
                         @endif
                     </div>
                     @php
@@ -224,7 +224,8 @@
                                         <td>
                                             <a href="/supplier/profile/${supplier.id}" >
                                                 ${supplier.name ?? ""}
-                                            </a></td>
+                                            </a>
+                                        </td>
                                         <td>${supplier.phone ?? ""}</td>
                                         <td>
                                             <span style="color: ${supplier.wallet_balance > 0 ? 'red' : ''};">
