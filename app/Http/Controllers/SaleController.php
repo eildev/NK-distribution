@@ -585,32 +585,34 @@ class SaleController extends Controller
             ]);
         }
     }
-    public function destroy($id)
-    {
-        $sale = Sale::findOrFail($id);
-        $customer = Customer::findOrFail($sale->customer_id);
+    // public function destroy($id)
+    // {
+    //     $sale = Sale::findOrFail($id);
+    //     $customer = Customer::findOrFail($sale->customer_id);
 
-        if ($sale->paid > 0) {
-            $accountTransaction = new AccountTransaction;
-            $accountTransaction->branch_id =  Auth::user()->branch_id;
-            $accountTransaction->reference_id = $sale->id;
-            $accountTransaction->purpose =  'Sale Delete';
-            $accountTransaction->account_id =  $sale->payment_method;
-            $accountTransaction->debit = $sale->paid;
-            $oldBalance = AccountTransaction::where('account_id', $sale->payment_method)->latest('created_at')->first();
-            $accountTransaction->balance = $oldBalance->balance - $sale->paid;
-            $accountTransaction->created_at = Carbon::now();
-            $accountTransaction->save();
-        }
+    //     if ($sale->paid > 0) {
+    //         $accountTransaction = new AccountTransaction;
+    //         $accountTransaction->branch_id =  Auth::user()->branch_id;
+    //         $accountTransaction->reference_id = $sale->id;
+    //         $accountTransaction->purpose =  'Sale Delete';
+    //         $accountTransaction->account_id =  $sale->payment_method;
+    //         $accountTransaction->debit = $sale->paid;
+    //         $oldBalance = AccountTransaction::where('account_id', $sale->payment_method)->latest('created_at')->first();
+    //         $accountTransaction->balance = $oldBalance->balance - $sale->paid;
+    //         $accountTransaction->created_at = Carbon::now();
+    //         $accountTransaction->save();
+    //     }
 
-        if ($sale->due > 0) {
-            $customer->wallet_balance -= $sale->due;
-            $customer->save();
-        }
+    //     if ($sale->due > 0) {
+    //         $customer->wallet_balance -= $sale->due;
+    //     }
+    //     $customer->total_receivable -= $sale->receivable;
+    //     $customer->total_payable -= $sale->paid;
+    //     $customer->save();
 
-        $sale->delete();
-        return back()->with('message', "Sale successfully Deleted");
-    }
+    //     $sale->delete();
+    //     return back()->with('message', "Sale successfully Deleted");
+    // }
     public function filter(Request $request)
     {
         // dd($request->all());
