@@ -6,6 +6,7 @@ use App\Models\Bank;
 use Illuminate\Http\Request;
 use App\Models\Customer;
 use App\Models\Branch;
+use App\Models\Sale;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -45,9 +46,9 @@ class CustomerController extends Controller
     } //End Method
     public function CustomerView()
     {
-        if(Auth::user()->id == 1){
+        if (Auth::user()->id == 1) {
             $customers = Customer::all();
-        }else{
+        } else {
             $customers = Customer::where('branch_id', Auth::user()->branch_id)->latest()->get();
         }
         return view('pos.customer.view_customer', compact('customers'));
@@ -90,7 +91,22 @@ class CustomerController extends Controller
     public function CustomerProfile($id)
     {
         $data = Customer::findOrFail($id);
-        $transactions = Transaction::where('customer_id', $data->id)->get();
+
+        // সব Sale বের করা
+        $sales = Sale::where('customer_id', $id)->get();
+
+        // Sale ID গুলোকে একটি অ্যারের মধ্যে রাখুন
+        $saleIds = $sales->pluck('id')->map(function ($id) {
+            return 'Sale#' . $id;
+        })->toArray();
+
+        // particulars এর চেক করার জন্য মান গুলো তৈরি করুন
+        $particularsToCheck = array_merge($saleIds, ['SaleDue', 'Return', 'Adjust Due Collection']);
+
+        // Transaction কুয়েরি
+        $transactions = Transaction::where('customer_id', $id)
+            ->whereIn('particulars', $particularsToCheck)
+            ->get();
         $branch = Branch::findOrFail($data->branch_id);
         $banks = Bank::latest()->get();
         $isCustomer = true;

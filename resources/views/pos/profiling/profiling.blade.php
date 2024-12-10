@@ -135,6 +135,7 @@
                                                 @endphp
 
                                                 @foreach ($transactions as $transaction)
+                                                    {{-- @dd($transaction->balance) --}}
                                                     <tr>
                                                         <td>{{ \Carbon\Carbon::parse($transaction->date)->format('F j, Y') ?? '' }}
                                                         </td>
@@ -197,7 +198,15 @@
                                                             @elseif ($transaction->particulars == 'SaleDue' || $transaction->particulars == 'PurchaseDue')
                                                                 {{ number_format($transaction->credit, 2) ?? 0 }}
                                                             @else
-                                                                {{ number_format($transaction->debit, 2) ?? 0 }}
+                                                                @if ($transaction->debit > 0)
+                                                                    @if ($transaction->debit > $transaction->credit)
+                                                                        {{ number_format($transaction->debit, 2) ?? 0 }}
+                                                                    @else
+                                                                        {{ number_format($transaction->credit, 2) ?? 0 }}
+                                                                    @endif
+                                                                @else
+                                                                    {{ number_format($transaction->credit, 2) ?? 0 }}
+                                                                @endif
                                                             @endif
                                                         </td>
                                                         <td>
@@ -206,6 +215,13 @@
                                                             @else
                                                                 @if ($transaction->debit > $transaction->credit)
                                                                     {{ number_format($transaction->debit - $transaction->credit, 2) ?? 0 }}
+
+                                                                    @php
+                                                                        $totalDebit +=
+                                                                            $transaction->debit -
+                                                                                $transaction->credit ??
+                                                                            0;
+                                                                    @endphp
                                                                 @else
                                                                     00
                                                                 @endif
@@ -220,6 +236,7 @@
                                                         </td>
 
                                                         <td>
+                                                            {{-- @dd($transaction->balance); --}}
                                                             @if ($transaction->particulars == 'Return')
                                                                 00
                                                             @else
@@ -233,7 +250,6 @@
                                                                 @endif
                                                                 @php
                                                                     $totalBalance += $transaction->balance ?? 0;
-                                                                    $totalDebit += $transaction->debit ?? 0;
                                                                     $totalCredit += $transaction->credit ?? 0;
                                                                 @endphp
                                                             @endif

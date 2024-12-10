@@ -61,7 +61,7 @@ class ReturnController extends Controller
                     $saleItem->save();
                     $Product = Product::findOrFail($saleItem->product_id);
                     //  dd($Product->stock);
-                    $stock = Stock::where('branch_id',Auth::user()->branch_id)->where('product_id', $saleItem->product_id)->first();
+                    $stock = Stock::where('branch_id', Auth::user()->branch_id)->where('product_id', $saleItem->product_id)->first();
                     if ($stock) {
                         $stock->stock_quantity = $stock->stock_quantity + $sale_item['quantity'];
                         $stock->save();
@@ -128,7 +128,6 @@ class ReturnController extends Controller
                 $sales->profit = $sales->profit - $total_return_profit;
                 $sales->save();
 
-                // customer crud
                 $customer = Customer::findOrFail($request->customer_id);
                 $customerDue = $customer->wallet_balance;
 
@@ -141,27 +140,29 @@ class ReturnController extends Controller
                 $accountTransaction->created_at = Carbon::now();
 
                 // transaction CRUD
-                $lastTransactionData = Transaction::latest('created_at')->first();
+                // $lastTransactionData = Transaction::latest('created_at')->first();
                 $transaction = new Transaction;
                 $transaction->date = $request->formattedReturnDate;
                 $transaction->others_id = $returns->id;
+                $transaction->processed_by =  Auth::user()->id;
                 $transaction->branch_id = Auth::user()->branch_id;
                 $transaction->payment_method = $request->paymentMethod;
                 $transaction->created_at = Carbon::now();
                 if ($request->adjustDue == 'yes') {
                     if ($customerDue > $request->refund_amount) {
-                        $dueBalance = $customerDue - $request->refund_amount;
-                        $customer->wallet_balance = $customer->wallet_balance - $dueBalance;
+                        $customer->total_payable = $customer->total_payable + $request->refund_amount;
+                        $customer->wallet_balance = $customer->wallet_balance - $request->refund_amount;
 
                         $accountTransaction->purpose =  'Adjust Due';
                         $accountTransaction->credit = $request->refund_amount;
                         $accountTransaction->balance = $lastTransaction->balance + $request->refund_amount;
 
                         $transaction->particulars = 'Adjust Due Collection';
+                        $transaction->customer_id = $customer->id;
                         $transaction->payment_type = 'receive';
                         $transaction->credit = $request->refund_amount;
-
-                        $transaction->balance = $lastTransactionData->balance + $request->refund_amount;
+                        $transaction->debit = 0;
+                        $transaction->balance = $transaction->debit - $transaction->credit;
                     } else {
                         $returnBalance = $request->refund_amount - $customerDue;
 
@@ -172,19 +173,24 @@ class ReturnController extends Controller
                         $accountTransaction->balance = $lastTransaction->balance - $returnBalance;
 
                         $transaction->particulars = 'Return';
+                        $transaction->customer_id = $customer->id;
                         $transaction->payment_type = 'pay';
+                        $transaction->credit = 0;
                         $transaction->debit = $returnBalance;
-                        $transaction->balance = $lastTransactionData->balance - $returnBalance;
+                        $transaction->balance = $transaction->debit - $transaction->credit;
                     }
                 } else {
+
                     $accountTransaction->purpose =  'Return';
                     $accountTransaction->debit = $request->refund_amount;
                     $accountTransaction->balance = $lastTransaction->balance - $request->refund_amount;
 
                     $transaction->particulars = 'Return';
+                    $transaction->customer_id = $customer->id;
                     $transaction->payment_type = 'pay';
+                    $transaction->credit = 0;
                     $transaction->debit = $request->refund_amount;
-                    $transaction->balance = $lastTransactionData->balance - $request->refund_amount;
+                    $transaction->balance = $transaction->debit - $transaction->credit;
                 }
                 $customer->save();
                 $accountTransaction->save();

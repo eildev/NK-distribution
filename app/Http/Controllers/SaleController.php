@@ -217,7 +217,7 @@ class SaleController extends Controller
             $category = Category::where('name', 'Via Sell')->first();
             foreach ($selectedItems as $item) {
                 $product = Product::findOrFail($item['product_id']);
-                $stock = Stock::where('branch_id',Auth::user()->branch_id)->where('product_id', $item['product_id'])->first();
+                $stock = Stock::where('branch_id', Auth::user()->branch_id)->where('product_id', $item['product_id'])->first();
                 if (!$stock) {
                     $stock = new Stock();
                     $stock->branch_id = Auth::user()->branch_id ?? 1;
@@ -230,7 +230,7 @@ class SaleController extends Controller
 
                 // Check if product is in the "Via Sell" category or stock is 0 or less
                 //  dd($stock->stock_quantity);
-                if ($category && $product->category_id == $category->id ||$stock->stock_quantity <= 0) {
+                if ($category && $product->category_id == $category->id || $stock->stock_quantity <= 0) {
                     $isViaSell = true;
                 }
                 // Handle the sale item
@@ -378,24 +378,16 @@ class SaleController extends Controller
             $accountTransaction->created_at = Carbon::now();
             $accountTransaction->save();
 
-            $lastTransaction = Transaction::where('customer_id', $request->customer_id)->latest()->first();
+            // $lastTransaction = Transaction::where('customer_id', $request->customer_id)->latest()->first();
             $transaction = new Transaction;
             $transaction->date =  $request->sale_date;
             $transaction->payment_type = 'receive';
             $transaction->particulars = 'Sale#' . $saleId;
             $transaction->customer_id = $request->customer_id;
             $transaction->payment_method = $request->payment_method;
-            if ($lastTransaction) {
-                // Update existing transaction
-                $transaction->credit = $transaction->credit + $request->total;
-                $transaction->debit = $transaction->debit + $request->paid;
-                $transaction->balance = $lastTransaction->balance - ($request->total - $request->paid);
-            } else {
-                // Create new transaction
-                $transaction->credit = $request->total;
-                $transaction->debit = $request->paid;
-                $transaction->balance = $request->total - $request->paid;
-            }
+            $transaction->credit = $request->paid;
+            $transaction->debit = $request->total;
+            $transaction->balance = $request->total - $request->paid;
             $transaction->branch_id =  Auth::user()->branch_id;
             $transaction->save();
 
@@ -596,6 +588,26 @@ class SaleController extends Controller
     public function destroy($id)
     {
         $sale = Sale::findOrFail($id);
+        $customer = Customer::findOrFail($sale->customer_id);
+
+        if ($sale->paid > 0) {
+            $accountTransaction = new AccountTransaction;
+            $accountTransaction->branch_id =  Auth::user()->branch_id;
+            $accountTransaction->reference_id = $sale->id;
+            $accountTransaction->purpose =  'Sale Delete';
+            $accountTransaction->account_id =  $sale->payment_method;
+            $accountTransaction->debit = $sale->paid;
+            $oldBalance = AccountTransaction::where('account_id', $sale->payment_method)->latest('created_at')->first();
+            $accountTransaction->balance = $oldBalance->balance - $sale->paid;
+            $accountTransaction->created_at = Carbon::now();
+            $accountTransaction->save();
+        }
+
+        if ($sale->due > 0) {
+            $customer->wallet_balance -= $sale->due;
+            $customer->save();
+        }
+
         $sale->delete();
         return back()->with('message', "Sale successfully Deleted");
     }
@@ -841,8 +853,8 @@ class SaleController extends Controller
         $products  = Product::withSum(['stockQuantity as stock_quantity_sum' => function ($query) {
             $query->where('branch_id', Auth::user()->branch_id);
         }], 'stock_quantity')
-        ->orderBy('stock_quantity_sum', 'asc')
-        ->get();
+            ->orderBy('stock_quantity_sum', 'asc')
+            ->get();
         return response()->json([
             'status' => '200',
             'products' => $products,
